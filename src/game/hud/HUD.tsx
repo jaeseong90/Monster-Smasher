@@ -34,34 +34,34 @@ export function HUD() {
 
   return (
     <div className="pointer-events-none absolute inset-0 z-20">
-      <div className="absolute top-2 left-2 right-2 flex items-start justify-between gap-3">
-        <div className="bg-black/55 backdrop-blur rounded-2xl px-3 py-2 border border-white/10 max-w-[55%]">
-          <div className="text-[10px] uppercase tracking-widest text-white/60">{myLabel}</div>
+      <div className="absolute top-safe left-safe right-safe flex items-start justify-between gap-3">
+        <div className="bg-black/55 backdrop-blur rounded-xl px-2.5 py-1.5 border border-white/10 min-w-0">
+          <div className="text-[9px] uppercase tracking-widest text-white/60">{myLabel}</div>
           <HpBar hp={myHp} color={myRole === "husband" ? "#3aa6ff" : "#ff5fa3"} />
-          <div className="mt-1 text-xs text-white/80 flex items-center gap-1">
-            {WEAPONS[myWeapon].emoji} <span>{WEAPONS[myWeapon].name}</span>
+          <div className="mt-0.5 text-[10px] text-white/80 flex items-center gap-1">
+            {WEAPONS[myWeapon].emoji} <span className="truncate">{WEAPONS[myWeapon].name}</span>
           </div>
         </div>
-        <div className="bg-black/55 backdrop-blur rounded-2xl px-3 py-2 border border-white/10 text-center">
-          <div className="text-amber-300 text-xs font-bold">웨이브 {wave}</div>
-          <div className="text-white text-xl font-bold tabular-nums">{score.toLocaleString()}</div>
-          {combo >= 2 && <div className="text-[10px] text-pink-300 font-bold">COMBO ×{combo}</div>}
+        <div className="bg-black/55 backdrop-blur rounded-xl px-3 py-1.5 border border-white/10 text-center shrink-0">
+          <div className="text-amber-300 text-[10px] font-bold">웨이브 {wave}</div>
+          <div className="text-white text-lg font-bold tabular-nums leading-tight">{score.toLocaleString()}</div>
+          {combo >= 2 && <div className="text-[9px] text-pink-300 font-bold">COMBO ×{combo}</div>}
         </div>
-        <div className="bg-black/55 backdrop-blur rounded-2xl px-3 py-2 border border-white/10 max-w-[55%]">
-          <div className="text-[10px] uppercase tracking-widest text-white/60 text-right">{partnerLabel}</div>
+        <div className="bg-black/55 backdrop-blur rounded-xl px-2.5 py-1.5 border border-white/10 min-w-0">
+          <div className="text-[9px] uppercase tracking-widest text-white/60 text-right">{partnerLabel}</div>
           {enabled ? (
             connected && remote ? (
               <>
                 <HpBar hp={partnerHp} color={partnerRole === "husband" ? "#3aa6ff" : "#ff5fa3"} />
-                <div className="mt-1 text-xs text-white/80 text-right flex items-center justify-end gap-1">
-                  {WEAPONS[remote.weapon as WeaponId]?.emoji} <span>{remote.name}</span>
+                <div className="mt-0.5 text-[10px] text-white/80 text-right flex items-center justify-end gap-1">
+                  {WEAPONS[remote.weapon as WeaponId]?.emoji} <span className="truncate max-w-[60px]">{remote.name}</span>
                 </div>
               </>
             ) : (
-              <div className="text-white/60 text-xs">대기중…</div>
+              <div className="text-white/60 text-[10px]">대기중…</div>
             )
           ) : (
-            <div className="text-white/60 text-xs">싱글 플레이</div>
+            <div className="text-white/60 text-[10px]">싱글</div>
           )}
         </div>
       </div>
@@ -80,7 +80,8 @@ export function HUD() {
 
       <button
         onClick={pause}
-        className="pointer-events-auto absolute top-2 left-1/2 -translate-x-1/2 -translate-y-[150%] mt-20 px-3 py-1 rounded-full bg-white/10 text-white text-xs border border-white/20 active:scale-95"
+        style={{ top: "calc(max(8px, env(safe-area-inset-top)) + 116px)" }}
+        className="pointer-events-auto absolute left-1/2 -translate-x-1/2 w-9 h-9 rounded-full bg-white/10 text-white text-sm border border-white/20 active:scale-95 grid place-items-center"
       >
         ⏸
       </button>
@@ -124,7 +125,7 @@ function PartnerDownPrompt({ progress }: { progress: number }) {
 
 function HpBar({ hp, color }: { hp: number; color: string }) {
   return (
-    <div className="w-32 h-2 bg-white/15 rounded-full overflow-hidden mt-1">
+    <div className="w-24 sm:w-32 h-1.5 bg-white/15 rounded-full overflow-hidden mt-0.5">
       <div
         className="h-full rounded-full transition-[width]"
         style={{ width: `${hp}%`, background: `linear-gradient(90deg, ${color}, ${color}cc)` }}
@@ -141,7 +142,10 @@ function WeaponSwapper() {
   const unlocked = useProgression((s) => s.unlockedWeapons);
 
   return (
-    <div className="pointer-events-auto absolute top-24 left-1/2 -translate-x-1/2 flex gap-2">
+    <div
+      className="pointer-events-auto absolute left-1/2 -translate-x-1/2 flex gap-1.5"
+      style={{ top: "calc(max(8px, env(safe-area-inset-top)) + 64px)" }}
+    >
       {list.map((w, i) => {
         const def = WEAPONS[w];
         const active = i === slot;
@@ -151,7 +155,7 @@ function WeaponSwapper() {
             key={w}
             onClick={() => !locked && setSlot(i)}
             disabled={locked}
-            className={`rounded-xl px-2.5 py-1.5 border text-xs flex items-center gap-1 active:scale-95 transition ${
+            className={`rounded-xl w-10 h-10 sm:w-auto sm:h-auto sm:px-2.5 sm:py-1.5 border text-xs flex items-center justify-center gap-1 active:scale-95 transition ${
               active
                 ? "bg-amber-400 text-black border-amber-300 shadow-[0_0_18px_rgba(255,200,80,0.5)]"
                 : locked

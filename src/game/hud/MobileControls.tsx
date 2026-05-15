@@ -74,31 +74,33 @@ function Joystick() {
   return (
     <div
       ref={padRef}
-      className="pointer-events-auto absolute left-0 bottom-0 w-1/2 h-[55%] touch-none"
+      className="pointer-events-auto absolute left-0 bottom-0 w-1/2 h-[55%] touch-none pl-safe pb-safe"
     >
       {knob && baseRef.current && (
         <>
           <div
             className="absolute rounded-full border-2 border-white/20 bg-white/5"
             style={{
-              left: baseRef.current.x - 70,
-              top: baseRef.current.y - 70,
-              width: 140,
-              height: 140,
+              left: baseRef.current.x - 64,
+              top: baseRef.current.y - 64,
+              width: 128,
+              height: 128,
             }}
           />
           <div
             className="absolute rounded-full bg-white/40 backdrop-blur"
             style={{
-              left: baseRef.current.x + knob.x - 30,
-              top: baseRef.current.y + knob.y - 30,
-              width: 60,
-              height: 60,
+              left: baseRef.current.x + knob.x - 28,
+              top: baseRef.current.y + knob.y - 28,
+              width: 56,
+              height: 56,
             }}
           />
         </>
       )}
-      <div className="absolute left-5 bottom-5 text-white/40 text-[11px]">조이스틱: 화면 왼쪽을 드래그</div>
+      <div className="absolute left-safe text-white/30 text-[10px]" style={{ bottom: "calc(max(12px, env(safe-area-inset-bottom)) + 4px)" }}>
+        ← 드래그
+      </div>
     </div>
   );
 }
@@ -120,7 +122,11 @@ function AttackButton() {
       onPointerUp={() => setAttack(false)}
       onPointerCancel={() => setAttack(false)}
       onContextMenu={(e) => e.preventDefault()}
-      className="pointer-events-auto absolute right-6 bottom-12 w-28 h-28 rounded-full bg-gradient-to-br from-rose-500 to-rose-700 border-4 border-rose-200/60 shadow-[0_8px_30px_rgba(255,50,90,0.5)] text-3xl active:scale-90 grid place-items-center"
+      style={{
+        right: "max(16px, env(safe-area-inset-right))",
+        bottom: "max(20px, env(safe-area-inset-bottom))",
+      }}
+      className="pointer-events-auto absolute w-24 h-24 rounded-full bg-gradient-to-br from-rose-500 to-rose-700 border-4 border-rose-200/60 shadow-[0_8px_30px_rgba(255,50,90,0.5)] text-3xl active:scale-90 grid place-items-center"
     >
       <span className="drop-shadow">{def.emoji}</span>
     </button>

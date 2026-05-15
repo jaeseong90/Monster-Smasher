@@ -5,12 +5,16 @@
 html,
 body,
 #__next {
-  height: 100%;
   width: 100%;
+  height: 100dvh;
   margin: 0;
   padding: 0;
   overscroll-behavior: none;
   -webkit-tap-highlight-color: transparent;
+}
+
+@supports not (height: 100dvh) {
+  html, body, #__next { height: 100vh; }
 }
 
 canvas {
@@ -22,3 +26,15 @@ canvas {
   -webkit-user-select: none;
   user-select: none;
 }
+
+.h-dvh { height: 100dvh; }
+.w-dvw { width: 100dvw; }
+.pb-safe { padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+.pt-safe { padding-top: max(8px, env(safe-area-inset-top)); }
+.pl-safe { padding-left: max(8px, env(safe-area-inset-left)); }
+.pr-safe { padding-right: max(8px, env(safe-area-inset-right)); }
+
+.bottom-safe { bottom: max(12px, env(safe-area-inset-bottom)); }
+.right-safe { right: max(12px, env(safe-area-inset-right)); }
+.left-safe { left: max(12px, env(safe-area-inset-left)); }
+.top-safe { top: max(8px, env(safe-area-inset-top)); }

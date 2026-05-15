@@ -8,5 +8,4 @@ dist
 *.log
 .idea
 .vscode
-
-.vercel
+tsconfig.tsbuildinfo

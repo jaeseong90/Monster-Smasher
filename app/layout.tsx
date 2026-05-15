@@ -5,6 +5,10 @@ export const metadata: Metadata = {
   title: "Monster Smasher",
   description: "화끈한 타격감과 골때리는 물리엔진! 아내와 함께 몬스터를 날려버려라.",
   manifest: "/manifest.webmanifest",
+  icons: {
+    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
+    apple: "/icon-192.svg",
+  },
 };
 
 export const viewport: Viewport = {
