@@ -87,3 +87,37 @@ export function ding() {
 export function hurt() {
   blip({ freq: 180, dur: 0.18, type: "sawtooth", vol: 0.25, slide: -80 });
 }
+
+let bgmInterval: number | null = null;
+export function startBgm() {
+  if (bgmInterval !== null) return;
+  const beat = () => {
+    const c = getCtx();
+    if (!c) return;
+    blip({ freq: 110, dur: 0.08, type: "sawtooth", vol: 0.07 });
+    setTimeout(() => blip({ freq: 220, dur: 0.05, type: "square", vol: 0.04 }), 220);
+    setTimeout(() => blip({ freq: 165, dur: 0.05, type: "square", vol: 0.04 }), 440);
+  };
+  beat();
+  bgmInterval = window.setInterval(beat, 660);
+}
+export function stopBgm() {
+  if (bgmInterval !== null) {
+    clearInterval(bgmInterval);
+    bgmInterval = null;
+  }
+}
+
+export function bossRoar() {
+  const c = getCtx();
+  if (!c) return;
+  blip({ freq: 80, dur: 0.6, type: "sawtooth", vol: 0.5, slide: -30 });
+  setTimeout(() => blip({ freq: 60, dur: 0.4, type: "square", vol: 0.3, slide: 20 }), 200);
+}
+
+export function fanfare() {
+  blip({ freq: 523, dur: 0.12, type: "triangle", vol: 0.25 });
+  setTimeout(() => blip({ freq: 659, dur: 0.12, type: "triangle", vol: 0.25 }), 130);
+  setTimeout(() => blip({ freq: 784, dur: 0.18, type: "triangle", vol: 0.3 }), 260);
+  setTimeout(() => blip({ freq: 1047, dur: 0.32, type: "triangle", vol: 0.35 }), 440);
+}

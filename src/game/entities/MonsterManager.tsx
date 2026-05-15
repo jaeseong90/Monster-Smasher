@@ -10,7 +10,8 @@ import { useNet } from "../net";
 import { useAttackBus, type AttackPing } from "./AttackBus";
 import { AttackVisuals, spawnExplosion, spawnSqueak, attackStore } from "./Attacks";
 import { ARENA_RADIUS } from "../world/Arena";
-import { ding, hurt } from "../sounds";
+import { ding, hurt, bossRoar, fanfare } from "../sounds";
+import { useShake } from "../camera";
 
 interface MonsterDef {
   type: "blob" | "spike" | "tank" | "runner" | "boss";
@@ -109,7 +110,15 @@ export function MonsterManager({ playerRef }: Props) {
     if (status !== "playing") return;
     setMonsters(waveDef);
     setAlive(waveDef.length);
-  }, [waveDef, status, setAlive]);
+    bodiesRef.current.clear();
+    monstersRef.current.clear();
+    if (wave % 5 === 0) {
+      bossRoar();
+      useShake.getState().add(1.0);
+    } else {
+      fanfare();
+    }
+  }, [waveDef, status, setAlive, wave]);
 
   const pushAttack = useAttackBus((s) => s.push);
   const prune = useAttackBus((s) => s.prune);

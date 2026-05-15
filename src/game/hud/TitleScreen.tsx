@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useGame } from "../store";
 import { useNet } from "../net";
+import { startBgm, stopBgm } from "../sounds";
 
 export function TitleScreen() {
   const start = useGame((s) => s.start);
@@ -31,6 +32,15 @@ export function TitleScreen() {
     if (myName) localStorage.setItem("ms-name", myName);
     localStorage.setItem("ms-role", myRole);
   }, [myName, myRole]);
+
+  useEffect(() => {
+    const fn = () => {
+      startBgm();
+      window.removeEventListener("pointerdown", fn);
+    };
+    window.addEventListener("pointerdown", fn, { once: true });
+    return () => window.removeEventListener("pointerdown", fn);
+  }, []);
 
   function genCode() {
     const c = Math.floor(1000 + Math.random() * 9000).toString();
