@@ -10,6 +10,7 @@ import { GameOverScreen } from "./hud/GameOverScreen";
 import { MobileControls } from "./hud/MobileControls";
 import { LoreIntro } from "./hud/LoreIntro";
 import { BiomeBanner } from "./hud/BiomeBanner";
+import { ChoreOverlay } from "./hud/ChoreOverlay";
 import { useGame } from "./store";
 import "./input";
 
@@ -52,13 +53,14 @@ export default function Game() {
       </Canvas>
 
       {status === "title" && <TitleScreen />}
-      {status === "playing" && (
+      {(status === "playing" || status === "chore-pvp") && (
         <>
           <HUD />
           <MobileControls />
           <BiomeBanner />
         </>
       )}
+      {(status === "chore-pvp" || status === "chore-result") && <ChoreOverlay />}
       {status === "paused" && <PausedOverlay />}
       {status === "gameover" && <GameOverScreen />}
       {intro && <LoreIntro onDone={() => setIntro(false)} />}

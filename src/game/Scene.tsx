@@ -9,6 +9,7 @@ import { LocalPlayer } from "./entities/LocalPlayer";
 import { RemotePlayerView } from "./entities/RemotePlayer";
 import { MonsterManager } from "./entities/MonsterManager";
 import { Drops } from "./entities/Drops";
+import { ChoreChest } from "./entities/ChoreChest";
 import { Hazards } from "./world/Hazards";
 import { useGame } from "./store";
 import { useNet } from "./net";
@@ -81,6 +82,7 @@ export function Scene() {
       <Hazards />
       <MonsterManager playerRef={playerRef} />
       <Drops playerRef={playerRef} />
+      <ChoreChest playerRef={playerRef} />
       <LocalPlayer positionRef={playerRef} />
       {enabled && remote && <RemotePlayerView state={remote} />}
     </group>

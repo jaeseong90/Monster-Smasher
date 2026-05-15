@@ -53,6 +53,9 @@ export function TitleScreen() {
             화끈한 타격감과 골때리는 물리엔진!<br />
             아내와 함께 몬스터를 날려버려라.
           </p>
+          <div className="mt-3 text-[10px] text-white/40 tracking-wider">
+            EP. 1 — 거실 균열의 시작
+          </div>
         </div>
 
         {mode === "menu" && (

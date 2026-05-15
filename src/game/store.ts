@@ -39,7 +39,7 @@ export const WEAPONS: Record<WeaponId, WeaponDef> = {
 export const HUSBAND_WEAPONS: WeaponId[] = ["hammer", "greatsword", "pan", "squeaky"];
 export const WIFE_WEAPONS: WeaponId[] = ["bazooka", "flamethrower", "leek", "squeaky"];
 
-export type GameStatus = "title" | "playing" | "paused" | "gameover";
+export type GameStatus = "title" | "playing" | "paused" | "gameover" | "chore-pvp" | "chore-result";
 
 export type ItemType = "heart" | "ammo" | "star";
 
@@ -78,6 +78,7 @@ interface GameState {
   floaters: FloatingText[];
   drops: DropItem[];
   partnerBonus: boolean;
+  choreWinner: "husband" | "wife" | null;
   start: () => void;
   reset: () => void;
   pause: () => void;
@@ -103,6 +104,8 @@ interface GameState {
   setPartnerBonus: (v: boolean) => void;
   healHusband: (n: number) => void;
   healWife: (n: number) => void;
+  startChorePvp: () => void;
+  endChorePvp: (winner: "husband" | "wife") => void;
 }
 
 let floaterId = 0;
@@ -126,6 +129,7 @@ export const useGame = create<GameState>((set, get) => ({
   floaters: [],
   drops: [],
   partnerBonus: false,
+  choreWinner: null,
   start: () => set({ status: "playing", score: 0, combo: 0, wave: 1, hpH: 100, hpW: 100, downH: false, downW: false, cprH: 0, cprW: 0, monstersKilled: 0, floaters: [] }),
   reset: () => set({ status: "title", score: 0, combo: 0, wave: 1, hpH: 100, hpW: 100, downH: false, downW: false, cprH: 0, cprW: 0, monstersKilled: 0, floaters: [] }),
   pause: () => set({ status: "paused" }),
@@ -194,6 +198,8 @@ export const useGame = create<GameState>((set, get) => ({
   setPartnerBonus: (v) => set({ partnerBonus: v }),
   healHusband: (n) => set((s) => ({ hpH: Math.min(100, s.hpH + n) })),
   healWife: (n) => set((s) => ({ hpW: Math.min(100, s.hpW + n) })),
+  startChorePvp: () => set({ status: "chore-pvp", choreWinner: null, hpH: 60, hpW: 60 }),
+  endChorePvp: (winner) => set({ status: "chore-result", choreWinner: winner }),
 }));
 
 let dropId = 0;

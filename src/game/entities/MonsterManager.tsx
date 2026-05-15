@@ -194,8 +194,14 @@ export function MonsterManager({ playerRef }: Props) {
     setAlive(alive);
 
     if (alive === 0 && monsters.length > 0 && isHost) {
-      nextWave();
-      ding();
+      const justBeatBoss = wave % 5 === 0;
+      const enabled2 = useNet.getState().enabled && useNet.getState().remote;
+      if (justBeatBoss && enabled2) {
+        useGame.getState().startChorePvp();
+      } else {
+        nextWave();
+        ding();
+      }
     }
 
     const bus = useAttackBus.getState();

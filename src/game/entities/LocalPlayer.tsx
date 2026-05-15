@@ -52,7 +52,7 @@ export function LocalPlayer({ positionRef }: Props) {
   useFrame((_, dt) => {
     if (!body.current) return;
     const input = useInput.getState();
-    if (status !== "playing") return;
+    if (status !== "playing" && status !== "chore-pvp") return;
 
     const gs = useGame.getState();
     const iAmDown = myRole === "husband" ? gs.downH : gs.downW;
