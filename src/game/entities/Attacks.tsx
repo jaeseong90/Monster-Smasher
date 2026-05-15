@@ -7,6 +7,8 @@ import * as THREE from "three";
 import type { WeaponId } from "../store";
 import { WEAPONS } from "../store";
 import { boom, flame, squeak } from "../sounds";
+import { useShake } from "../camera";
+import { haptic, hapticPattern } from "../haptics";
 
 export interface VisualSwing {
   id: number;
@@ -71,6 +73,10 @@ export function useAttacks() {
 export function spawnSwing(opts: { origin: [number, number, number]; dir: [number, number]; owner: "me" | "remote"; weapon: WeaponId }) {
   const s: VisualSwing = { ...opts, id: ++idc, born: performance.now(), ttl: 250 };
   store.setState((p) => ({ swings: [...p.swings.slice(-40), s] }));
+  if (opts.owner === "me") {
+    useShake.getState().add(0.15);
+    haptic("light");
+  }
 }
 
 export function spawnProjectile(opts: { origin: [number, number, number]; dir: [number, number]; owner: "me" | "remote"; weapon: WeaponId }) {
@@ -91,6 +97,8 @@ export function spawnExplosion(pos: [number, number, number], radius: number) {
   const e: VisualExplosion = { id: ++idc, pos, radius, born: performance.now(), ttl: 500 };
   store.setState((s) => ({ explosions: [...s.explosions.slice(-30), e] }));
   boom();
+  useShake.getState().add(0.8);
+  hapticPattern([20, 30, 40]);
 }
 
 export function spawnFlame(opts: { origin: [number, number, number]; dir: [number, number]; owner: "me" | "remote" }) {

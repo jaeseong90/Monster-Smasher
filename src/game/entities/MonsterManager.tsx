@@ -13,7 +13,7 @@ import { ARENA_RADIUS } from "../world/Arena";
 import { ding, hurt } from "../sounds";
 
 interface MonsterDef {
-  type: "blob" | "spike" | "tank" | "runner";
+  type: "blob" | "spike" | "tank" | "runner" | "boss";
   hp: number;
   speed: number;
   damage: number;
@@ -27,6 +27,7 @@ const TYPES: Record<MonsterDef["type"], MonsterDef> = {
   runner: { type: "runner", hp: 18, speed: 3.2, damage: 6, color: "#ff5cbd", scale: 0.7, score: 15 },
   tank: { type: "tank", hp: 80, speed: 1.0, damage: 15, color: "#ff8a3a", scale: 1.4, score: 30 },
   spike: { type: "spike", hp: 24, speed: 2.0, damage: 12, color: "#3affb0", scale: 0.9, score: 20 },
+  boss: { type: "boss", hp: 400, speed: 0.7, damage: 20, color: "#ff2a4a", scale: 2.4, score: 200 },
 };
 
 interface Monster {
@@ -67,8 +68,26 @@ export function MonsterManager({ playerRef }: Props) {
 
   const waveDef = useMemo(() => {
     const rng = mulberry32(seedBase + wave * 17);
-    const count = Math.min(4 + wave * 2, 16);
+    const isBoss = wave % 5 === 0;
     const list: { id: number; def: MonsterDef; spawn: [number, number, number] }[] = [];
+    if (isBoss) {
+      list.push({
+        id: ++monsterId,
+        def: { ...TYPES.boss, hp: 400 + wave * 60 },
+        spawn: [0, 1.4, -8],
+      });
+      const minions = Math.min(4, Math.floor(wave / 2));
+      for (let i = 0; i < minions; i++) {
+        const ang = rng() * Math.PI * 2;
+        list.push({
+          id: ++monsterId,
+          def: TYPES.runner,
+          spawn: [Math.cos(ang) * (ARENA_RADIUS - 3), 1.0, Math.sin(ang) * (ARENA_RADIUS - 3)],
+        });
+      }
+      return list;
+    }
+    const count = Math.min(4 + wave * 2, 16);
     for (let i = 0; i < count; i++) {
       const r = rng();
       let type: MonsterDef["type"] = "blob";
@@ -412,6 +431,44 @@ function MonsterMesh({ def }: { def: MonsterDef }) {
         <mesh position={[0.1, 0.42, 0.33]}>
           <sphereGeometry args={[0.04, 10, 10]} />
           <meshBasicMaterial color="#000" />
+        </mesh>
+      </group>
+    );
+  }
+  if (def.type === "boss") {
+    return (
+      <group ref={ref} scale={def.scale}>
+        <mesh castShadow>
+          <sphereGeometry args={[0.6, 18, 14]} />
+          <meshStandardMaterial color={def.color} roughness={0.55} emissive="#3a0010" emissiveIntensity={0.4} />
+        </mesh>
+        <mesh position={[0, 0.65, 0]}>
+          <coneGeometry args={[0.3, 0.55, 5]} />
+          <meshStandardMaterial color="#3a0010" />
+        </mesh>
+        <mesh position={[-0.22, 0.45, 0.5]}>
+          <sphereGeometry args={[0.12, 12, 12]} />
+          <meshBasicMaterial color="#fff" />
+        </mesh>
+        <mesh position={[0.22, 0.45, 0.5]}>
+          <sphereGeometry args={[0.12, 12, 12]} />
+          <meshBasicMaterial color="#fff" />
+        </mesh>
+        <mesh position={[-0.22, 0.45, 0.6]}>
+          <sphereGeometry args={[0.07, 10, 10]} />
+          <meshBasicMaterial color="#ff0000" />
+        </mesh>
+        <mesh position={[0.22, 0.45, 0.6]}>
+          <sphereGeometry args={[0.07, 10, 10]} />
+          <meshBasicMaterial color="#ff0000" />
+        </mesh>
+        <mesh position={[-0.6, -0.05, 0]} rotation={[0, 0, -0.5]}>
+          <coneGeometry args={[0.18, 0.55, 5]} />
+          <meshStandardMaterial color="#7a0a20" />
+        </mesh>
+        <mesh position={[0.6, -0.05, 0]} rotation={[0, 0, 0.5]}>
+          <coneGeometry args={[0.18, 0.55, 5]} />
+          <meshStandardMaterial color="#7a0a20" />
         </mesh>
       </group>
     );

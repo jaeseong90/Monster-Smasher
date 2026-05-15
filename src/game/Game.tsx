@@ -8,12 +8,16 @@ import { HUD } from "./hud/HUD";
 import { TitleScreen } from "./hud/TitleScreen";
 import { GameOverScreen } from "./hud/GameOverScreen";
 import { MobileControls } from "./hud/MobileControls";
+import { LoreIntro } from "./hud/LoreIntro";
+import { BiomeBanner } from "./hud/BiomeBanner";
 import { useGame } from "./store";
 import "./input";
 
 export default function Game() {
   const status = useGame((s) => s.status);
   const [debug, setDebug] = useState(false);
+  const [intro, setIntro] = useState(false);
+  const [introSeen, setIntroSeen] = useState(false);
 
   useEffect(() => {
     const fn = (e: KeyboardEvent) => {
@@ -22,6 +26,13 @@ export default function Game() {
     window.addEventListener("keydown", fn);
     return () => window.removeEventListener("keydown", fn);
   }, []);
+
+  useEffect(() => {
+    if (status === "playing" && !introSeen) {
+      setIntro(true);
+      setIntroSeen(true);
+    }
+  }, [status, introSeen]);
 
   return (
     <div className="relative w-full h-full">
@@ -45,10 +56,12 @@ export default function Game() {
         <>
           <HUD />
           <MobileControls />
+          <BiomeBanner />
         </>
       )}
       {status === "paused" && <PausedOverlay />}
       {status === "gameover" && <GameOverScreen />}
+      {intro && <LoreIntro onDone={() => setIntro(false)} />}
     </div>
   );
 }

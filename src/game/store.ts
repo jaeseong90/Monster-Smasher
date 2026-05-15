@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { useNet } from "./net";
 
 export type WeaponId =
   | "hammer"
@@ -56,6 +57,10 @@ interface GameState {
   wave: number;
   hpH: number;
   hpW: number;
+  downH: boolean;
+  downW: boolean;
+  cprH: number;
+  cprW: number;
   husbandWeapon: WeaponId;
   wifeWeapon: WeaponId;
   monstersAlive: number;
@@ -71,6 +76,8 @@ interface GameState {
   decayCombo: (dt: number) => void;
   damageHusband: (n: number) => void;
   damageWife: (n: number) => void;
+  cprHusband: (n: number) => void;
+  cprWife: (n: number) => void;
   setHusbandWeapon: (w: WeaponId) => void;
   setWifeWeapon: (w: WeaponId) => void;
   setAlive: (n: number) => void;
@@ -90,13 +97,17 @@ export const useGame = create<GameState>((set, get) => ({
   wave: 1,
   hpH: 100,
   hpW: 100,
+  downH: false,
+  downW: false,
+  cprH: 0,
+  cprW: 0,
   husbandWeapon: "hammer",
   wifeWeapon: "bazooka",
   monstersAlive: 0,
   monstersKilled: 0,
   floaters: [],
-  start: () => set({ status: "playing", score: 0, combo: 0, wave: 1, hpH: 100, hpW: 100, monstersKilled: 0, floaters: [] }),
-  reset: () => set({ status: "title", score: 0, combo: 0, wave: 1, hpH: 100, hpW: 100, monstersKilled: 0, floaters: [] }),
+  start: () => set({ status: "playing", score: 0, combo: 0, wave: 1, hpH: 100, hpW: 100, downH: false, downW: false, cprH: 0, cprW: 0, monstersKilled: 0, floaters: [] }),
+  reset: () => set({ status: "title", score: 0, combo: 0, wave: 1, hpH: 100, hpW: 100, downH: false, downW: false, cprH: 0, cprW: 0, monstersKilled: 0, floaters: [] }),
   pause: () => set({ status: "paused" }),
   resume: () => set({ status: "playing" }),
   setStatus: (s) => set({ status: s }),
@@ -109,15 +120,37 @@ export const useGame = create<GameState>((set, get) => ({
   },
   damageHusband: (n) =>
     set((s) => {
+      if (s.downH) return {};
       const hp = Math.max(0, s.hpH - n);
-      const status = hp === 0 && s.hpW === 0 ? "gameover" : s.status;
-      return { hpH: hp, status };
+      const down = hp === 0;
+      const net = useNet.getState();
+      const isSolo = !net.enabled || !net.remote;
+      const status = down && (isSolo || s.downW) ? "gameover" : s.status;
+      return { hpH: hp, downH: down, status };
     }),
   damageWife: (n) =>
     set((s) => {
+      if (s.downW) return {};
       const hp = Math.max(0, s.hpW - n);
-      const status = hp === 0 && s.hpH === 0 ? "gameover" : s.status;
-      return { hpW: hp, status };
+      const down = hp === 0;
+      const net = useNet.getState();
+      const isSolo = !net.enabled || !net.remote;
+      const status = down && (isSolo || s.downH) ? "gameover" : s.status;
+      return { hpW: hp, downW: down, status };
+    }),
+  cprHusband: (n: number) =>
+    set((s) => {
+      if (!s.downH) return {};
+      const t = s.cprH + n;
+      if (t >= 100) return { downH: false, cprH: 0, hpH: 40 };
+      return { cprH: t };
+    }),
+  cprWife: (n: number) =>
+    set((s) => {
+      if (!s.downW) return {};
+      const t = s.cprW + n;
+      if (t >= 100) return { downW: false, cprW: 0, hpW: 40 };
+      return { cprW: t };
     }),
   setHusbandWeapon: (w) => set({ husbandWeapon: w }),
   setWifeWeapon: (w) => set({ wifeWeapon: w }),

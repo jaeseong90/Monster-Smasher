@@ -4,12 +4,14 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { Arena } from "./world/Arena";
+import { Skybox } from "./world/Skybox";
 import { LocalPlayer } from "./entities/LocalPlayer";
 import { RemotePlayerView } from "./entities/RemotePlayer";
 import { MonsterManager } from "./entities/MonsterManager";
 import { Hazards } from "./world/Hazards";
 import { useGame } from "./store";
 import { useNet } from "./net";
+import { useShake } from "./camera";
 
 export function Scene() {
   const status = useGame((s) => s.status);
@@ -40,6 +42,12 @@ export function Scene() {
     }
     const desired = new THREE.Vector3(cx, 14, cz + 11);
     camera.position.lerp(desired, Math.min(1, dt * 3));
+    const shake = useShake.getState().consume(dt);
+    if (shake > 0) {
+      camera.position.x += (Math.random() - 0.5) * shake * 0.6;
+      camera.position.y += (Math.random() - 0.5) * shake * 0.4;
+      camera.position.z += (Math.random() - 0.5) * shake * 0.6;
+    }
     lookAt.set(cx, 0.5, cz);
     camera.lookAt(lookAt);
   });
@@ -63,6 +71,7 @@ export function Scene() {
       <pointLight position={[-8, 5, -6]} intensity={20} color="#ff5cc1" distance={20} />
       <pointLight position={[8, 5, 8]} intensity={18} color="#39f0ff" distance={20} />
 
+      <Skybox />
       <Arena />
       <Hazards />
       <MonsterManager playerRef={playerRef} />

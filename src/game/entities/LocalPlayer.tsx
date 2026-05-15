@@ -54,6 +54,26 @@ export function LocalPlayer({ positionRef }: Props) {
     const input = useInput.getState();
     if (status !== "playing") return;
 
+    const gs = useGame.getState();
+    const iAmDown = myRole === "husband" ? gs.downH : gs.downW;
+    if (iAmDown) {
+      body.current.setLinvel({ x: 0, y: 0, z: 0 }, true);
+      const t = body.current.translation();
+      positionRef.current.set(t.x, t.y, t.z);
+      if (modelRef.current) {
+        modelRef.current.position.set(t.x, 0.1, t.z);
+        modelRef.current.rotation.set(Math.PI / 2, facing.current, 0);
+      }
+      if (enabled) {
+        lastBroadcast.current += dt;
+        if (lastBroadcast.current >= 0.066) {
+          lastBroadcast.current = 0;
+          broadcastSelf({ x: t.x, z: t.z, rot: facing.current, hp: 0, weapon: myWeaponId });
+        }
+      }
+      return;
+    }
+
     const speed = 6.5;
     const vel = body.current.linvel();
     const tx = input.move.x * speed;
@@ -82,6 +102,20 @@ export function LocalPlayer({ positionRef }: Props) {
     const wDef = WEAPONS[myWeaponId];
     lastAttack.current += dt;
     const pressed = consumeAttackEdge() || input.attack;
+
+    const partnerDown = myRole === "husband" ? gs.downW : gs.downH;
+    if (partnerDown && enabled) {
+      const rp = useNet.getState().remote;
+      if (rp) {
+        const d = Math.hypot(rp.x - t.x, rp.z - t.z);
+        if (d < 1.6 && input.attack) {
+          if (myRole === "husband") useGame.getState().cprWife(80 * dt);
+          else useGame.getState().cprHusband(80 * dt);
+          ding();
+          return;
+        }
+      }
+    }
     if (pressed && lastAttack.current >= wDef.cooldown) {
       lastAttack.current = 0;
       const ang = facing.current;

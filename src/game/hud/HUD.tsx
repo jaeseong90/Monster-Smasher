@@ -11,6 +11,10 @@ export function HUD() {
   const wave = useGame((s) => s.wave);
   const hpH = useGame((s) => s.hpH);
   const hpW = useGame((s) => s.hpW);
+  const downH = useGame((s) => s.downH);
+  const downW = useGame((s) => s.downW);
+  const cprH = useGame((s) => s.cprH);
+  const cprW = useGame((s) => s.cprW);
   const myRole = useNet((s) => s.myRole);
   const connected = useNet((s) => s.connected);
   const enabled = useNet((s) => s.enabled);
@@ -77,6 +81,38 @@ export function HUD() {
       </button>
 
       <ComboFlash />
+
+      {(myRole === "husband" && downH) || (myRole === "wife" && downW) ? (
+        <DownOverlay role={myRole} progress={myRole === "husband" ? cprH : cprW} />
+      ) : null}
+
+      {(myRole === "husband" && downW) || (myRole === "wife" && downH) ? (
+        <PartnerDownPrompt progress={myRole === "husband" ? cprW : cprH} />
+      ) : null}
+    </div>
+  );
+}
+
+function DownOverlay({ role, progress }: { role: "husband" | "wife"; progress: number }) {
+  return (
+    <div className="absolute inset-0 z-30 bg-black/60 backdrop-blur-sm grid place-items-center text-center">
+      <div className="max-w-xs space-y-3">
+        <div className="text-6xl animate-pulse">{role === "husband" ? "🧔💫" : "👰💫"}</div>
+        <h2 className="text-3xl font-black text-rose-300">기절!</h2>
+        <p className="text-white/70 text-sm">파트너가 다가와서 깨워줄 때까지 버텨!</p>
+        <div className="w-48 mx-auto h-2 rounded-full bg-white/15 overflow-hidden">
+          <div className="h-full bg-gradient-to-r from-rose-400 to-amber-300" style={{ width: `${progress}%` }} />
+        </div>
+        <div className="text-xs text-white/50 italic">"여보… 일어나…"</div>
+      </div>
+    </div>
+  );
+}
+
+function PartnerDownPrompt({ progress }: { progress: number }) {
+  return (
+    <div className="absolute bottom-44 left-1/2 -translate-x-1/2 z-25 bg-amber-400/90 text-black px-4 py-2 rounded-2xl font-bold text-sm shadow-lg animate-pulse">
+      ❤️ 다가가서 공격 버튼 연타 — {Math.round(progress)}%
     </div>
   );
 }
