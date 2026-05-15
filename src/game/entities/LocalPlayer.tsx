@@ -97,7 +97,7 @@ export function LocalPlayer({ positionRef }: Props) {
       if (moveMag > 0.05) {
         facing.current = Math.atan2(input.move.x, input.move.y);
       }
-      modelRef.current.rotation.y = facing.current;
+      modelRef.current.rotation.set(0, facing.current, 0);
     }
     sinceAttack.current += dt;
     if (moveMag > 0.05) {
