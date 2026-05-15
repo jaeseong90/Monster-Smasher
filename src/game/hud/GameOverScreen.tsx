@@ -22,8 +22,9 @@ export function GameOverScreen() {
   }, [recordRun, score, wave, kills]);
 
   return (
-    <div className="absolute inset-0 z-30 flex items-center justify-center bg-gradient-to-b from-rose-900/80 to-black/95 p-4">
-      <div className="max-w-md w-full rounded-3xl bg-white/5 border border-white/10 p-6 text-center space-y-4">
+    <div className="absolute inset-0 z-30 overflow-y-auto overscroll-contain touch-pan-y bg-gradient-to-b from-rose-900/80 to-black/95">
+      <div className="min-h-full flex items-start sm:items-center justify-center p-4 pt-safe pb-safe">
+        <div className="max-w-md w-full rounded-3xl bg-white/5 border border-white/10 p-6 text-center space-y-4">
         <div className="text-6xl animate-pulse">💀</div>
         <h2 className="text-5xl font-black text-rose-300 drop-shadow-[0_0_20px_rgba(255,60,90,0.5)]">
           KO!
@@ -62,6 +63,7 @@ export function GameOverScreen() {
           >
             메뉴로
           </button>
+        </div>
         </div>
       </div>
     </div>

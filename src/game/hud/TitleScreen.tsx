@@ -57,7 +57,7 @@ export function TitleScreen() {
     <div className="absolute inset-0 z-30 overflow-hidden">
       <AtmosphereLayer />
 
-      <div className="relative h-full w-full flex items-center justify-center p-4 pt-safe pb-safe overflow-y-auto">
+      <div className="relative h-full w-full overflow-y-auto overscroll-contain touch-pan-y flex items-start sm:items-center justify-center p-4 pt-safe pb-safe">
         <div className="max-w-md w-full">
           <header className="text-center mb-7">
             <div className="text-[10px] tracking-[0.45em] text-amber-200/70 mb-3 uppercase">

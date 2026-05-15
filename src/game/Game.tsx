@@ -87,22 +87,24 @@ function PausedOverlay() {
   const resume = useGame((s) => s.resume);
   const reset = useGame((s) => s.reset);
   return (
-    <div className="absolute inset-0 z-30 grid place-items-center bg-black/60 backdrop-blur-sm">
-      <div className="rounded-2xl bg-white/10 border border-white/20 p-6 text-center space-y-4">
-        <h2 className="text-3xl font-bold text-amber-300">일시정지</h2>
-        <div className="flex gap-3 justify-center">
-          <button
-            onClick={resume}
-            className="px-5 py-2 rounded-xl bg-amber-400 text-black font-bold active:scale-95"
-          >
-            계속
-          </button>
-          <button
-            onClick={reset}
-            className="px-5 py-2 rounded-xl bg-white/15 text-white font-bold active:scale-95"
-          >
-            메인으로
-          </button>
+    <div className="absolute inset-0 z-30 overflow-y-auto overscroll-contain touch-pan-y bg-black/60 backdrop-blur-sm">
+      <div className="min-h-full flex items-center justify-center p-4 pt-safe pb-safe">
+        <div className="rounded-2xl bg-white/10 border border-white/20 p-6 text-center space-y-4">
+          <h2 className="text-3xl font-bold text-amber-300">일시정지</h2>
+          <div className="flex gap-3 justify-center">
+            <button
+              onClick={resume}
+              className="px-5 py-2 rounded-xl bg-amber-400 text-black font-bold active:scale-95"
+            >
+              계속
+            </button>
+            <button
+              onClick={reset}
+              className="px-5 py-2 rounded-xl bg-white/15 text-white font-bold active:scale-95"
+            >
+              메인으로
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -9,7 +9,9 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Tailwind](https://img.shields.io/badge/Tailwind-3.4-38bdf8?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 
-**🎮 데모:** _(배포 후 채워질 자리)_ · **📱 모바일 가로모드 전용**
+**🎮 라이브 데모:** **[monster-smasher.vercel.app](https://monster-smasher.vercel.app/)** · **📱 모바일 가로모드 권장**
+
+[![Open Demo](https://img.shields.io/badge/▶_Play_Now-monster--smasher.vercel.app-ff5cbd?style=for-the-badge)](https://monster-smasher.vercel.app/)
 
 <!-- TODO: gameplay.gif 또는 hero screenshot 자리. /docs/hero.png 같은 경로 추천 -->
 
@@ -95,6 +97,10 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGc...
 ```
 
 환경변수가 없으면 자동으로 싱글 플레이로 폴백합니다. **`anon` 키만 사용하며 RLS 우려가 없는 영역**(Realtime 채널만)에서 동작합니다.
+
+## 배포
+
+`main` 브랜치 푸시시 [Vercel](https://vercel.com)이 자동 빌드·배포합니다 → [monster-smasher.vercel.app](https://monster-smasher.vercel.app/).
 
 ## 스택
 

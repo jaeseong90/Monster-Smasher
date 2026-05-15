@@ -44,26 +44,28 @@ export function ChoreOverlay() {
   if (status === "chore-result" && winner) {
     const iWon = winner === myRole;
     return (
-      <div className="absolute inset-0 z-30 grid place-items-center bg-gradient-to-b from-amber-900/85 to-black/95 p-4">
-        <div className="max-w-md w-full rounded-3xl bg-white/5 border border-white/10 p-6 text-center space-y-3">
-          <div className="text-6xl">{iWon ? "🏆" : "🧽"}</div>
-          <h2 className="text-3xl font-black text-amber-300">
-            {iWon ? "설거지 면제!" : "오늘은 설거지…"}
-          </h2>
-          <p className="text-white/75 text-sm">
-            {iWon
-              ? "공식 인증. 보너스 라운드 보상도 챙기세요."
-              : `${winner === "husband" ? "남편" : "아내"}님이 상자를 차지했습니다.`}
-          </p>
-          <button
-            onClick={() => {
-              nextWave();
-              setStatus("playing");
-            }}
-            className="w-full py-3 rounded-xl bg-amber-400 text-black font-bold active:scale-95 mt-2"
-          >
-            계속하기
-          </button>
+      <div className="absolute inset-0 z-30 overflow-y-auto overscroll-contain touch-pan-y bg-gradient-to-b from-amber-900/85 to-black/95">
+        <div className="min-h-full flex items-center justify-center p-4 pt-safe pb-safe">
+          <div className="max-w-md w-full rounded-3xl bg-white/5 border border-white/10 p-6 text-center space-y-3">
+            <div className="text-6xl">{iWon ? "🏆" : "🧽"}</div>
+            <h2 className="text-3xl font-black text-amber-300">
+              {iWon ? "설거지 면제!" : "오늘은 설거지…"}
+            </h2>
+            <p className="text-white/75 text-sm">
+              {iWon
+                ? "공식 인증. 보너스 라운드 보상도 챙기세요."
+                : `${winner === "husband" ? "남편" : "아내"}님이 상자를 차지했습니다.`}
+            </p>
+            <button
+              onClick={() => {
+                nextWave();
+                setStatus("playing");
+              }}
+              className="w-full py-3 rounded-xl bg-amber-400 text-black font-bold active:scale-95 mt-2"
+            >
+              계속하기
+            </button>
+          </div>
         </div>
       </div>
     );
