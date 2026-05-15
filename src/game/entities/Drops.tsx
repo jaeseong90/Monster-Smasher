@@ -53,27 +53,98 @@ export function Drops({ playerRef }: Props) {
 
 function DropMesh({ drop }: { drop: DropItem }) {
   const ref = useRef<THREE.Group>(null!);
+  const haloRef = useRef<THREE.Mesh>(null!);
   useFrame(() => {
     if (!ref.current) return;
-    ref.current.rotation.y = performance.now() * 0.003;
-    ref.current.position.y = 0.6 + Math.sin(performance.now() * 0.004) * 0.15;
+    const t = performance.now() * 0.001;
+    ref.current.rotation.y = t * 2;
+    ref.current.position.y = Math.sin(t * 3.2) * 0.12;
+    if (haloRef.current) {
+      const s = 1 + Math.sin(t * 4) * 0.12;
+      haloRef.current.scale.setScalar(s);
+    }
   });
   const color = drop.type === "heart" ? "#ff4a82" : drop.type === "star" ? "#ffd54a" : "#7eff8e";
+
   return (
-    <group position={[drop.x, 0.6, drop.z]}>
+    <group position={[drop.x, 0.65, drop.z]}>
       <group ref={ref}>
-        <mesh castShadow>
-          {drop.type === "star" ? (
-            <icosahedronGeometry args={[0.3, 0]} />
-          ) : drop.type === "heart" ? (
-            <sphereGeometry args={[0.25, 12, 10]} />
-          ) : (
-            <boxGeometry args={[0.4, 0.4, 0.4]} />
-          )}
-          <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.6} roughness={0.3} />
+        {drop.type === "heart" ? <HeartShape color={color} /> : drop.type === "star" ? <GemShape color={color} /> : <AmmoCrate color={color} />}
+        <mesh ref={haloRef} rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.4, 0]}>
+          <ringGeometry args={[0.35, 0.45, 32]} />
+          <meshBasicMaterial color={color} transparent opacity={0.6} toneMapped={false} />
         </mesh>
-        <pointLight color={color} intensity={4} distance={3} />
       </group>
+      <pointLight color={color} intensity={3.5} distance={3} />
+    </group>
+  );
+}
+
+function HeartShape({ color }: { color: string }) {
+  return (
+    <group rotation={[Math.PI, 0, 0]}>
+      <mesh castShadow position={[-0.13, 0.04, 0]}>
+        <sphereGeometry args={[0.16, 18, 18]} />
+        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.85} roughness={0.3} metalness={0.2} toneMapped={false} />
+      </mesh>
+      <mesh castShadow position={[0.13, 0.04, 0]}>
+        <sphereGeometry args={[0.16, 18, 18]} />
+        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.85} roughness={0.3} metalness={0.2} toneMapped={false} />
+      </mesh>
+      <mesh castShadow position={[0, -0.2, 0]} rotation={[0, 0, Math.PI / 4]}>
+        <boxGeometry args={[0.26, 0.26, 0.26]} />
+        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.85} roughness={0.3} metalness={0.2} toneMapped={false} />
+      </mesh>
+      <mesh position={[-0.06, 0.1, 0.15]}>
+        <sphereGeometry args={[0.04, 10, 10]} />
+        <meshBasicMaterial color="#ffffff" toneMapped={false} />
+      </mesh>
+    </group>
+  );
+}
+
+function GemShape({ color }: { color: string }) {
+  return (
+    <group>
+      <mesh castShadow position={[0, 0.12, 0]}>
+        <coneGeometry args={[0.24, 0.28, 6]} />
+        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.9} metalness={0.55} roughness={0.18} toneMapped={false} />
+      </mesh>
+      <mesh castShadow position={[0, -0.05, 0]} rotation={[Math.PI, 0, 0]}>
+        <coneGeometry args={[0.24, 0.34, 6]} />
+        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.7} metalness={0.55} roughness={0.18} toneMapped={false} />
+      </mesh>
+      <mesh position={[0, 0.04, 0]}>
+        <torusGeometry args={[0.24, 0.018, 6, 6]} />
+        <meshBasicMaterial color="#fff" toneMapped={false} />
+      </mesh>
+    </group>
+  );
+}
+
+function AmmoCrate({ color }: { color: string }) {
+  return (
+    <group>
+      <mesh castShadow>
+        <boxGeometry args={[0.4, 0.32, 0.4]} />
+        <meshStandardMaterial color="#2a2a32" roughness={0.6} metalness={0.4} />
+      </mesh>
+      <mesh position={[0, 0.05, 0.21]}>
+        <boxGeometry args={[0.3, 0.16, 0.02]} />
+        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={1.0} toneMapped={false} />
+      </mesh>
+      <mesh position={[0, 0.18, 0]}>
+        <boxGeometry args={[0.42, 0.03, 0.42]} />
+        <meshStandardMaterial color="#1a1a22" metalness={0.55} roughness={0.45} />
+      </mesh>
+      <mesh position={[0.21, 0.0, 0]}>
+        <boxGeometry args={[0.02, 0.32, 0.42]} />
+        <meshStandardMaterial color="#3a3a48" metalness={0.6} roughness={0.4} />
+      </mesh>
+      <mesh position={[-0.21, 0.0, 0]}>
+        <boxGeometry args={[0.02, 0.32, 0.42]} />
+        <meshStandardMaterial color="#3a3a48" metalness={0.6} roughness={0.4} />
+      </mesh>
     </group>
   );
 }

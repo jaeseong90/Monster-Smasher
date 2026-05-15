@@ -51,6 +51,13 @@ export interface DeathEvent {
   reason: string;
 }
 
+export interface PlayerSnapshot {
+  x: number;
+  z: number;
+  rot: number;
+  t: number;
+}
+
 export interface NetState {
   enabled: boolean;
   connected: boolean;
@@ -60,6 +67,8 @@ export interface NetState {
   myRole: Role;
   isHost: boolean;
   remote?: RemotePlayer;
+  remoteSnaps: PlayerSnapshot[];
+  lastRemoteAttackT: number;
   channel?: Channel;
   client?: SupabaseClient;
   worldSeed: number;
@@ -74,9 +83,11 @@ export interface NetState {
   broadcastAttack: (a: AttackEvent) => void;
   broadcastHit: (h: HitEvent) => void;
   broadcastMonsters: (list: RemoteMonsterState[]) => void;
+  broadcastWave: (wave: number) => void;
   onMonsters?: (list: RemoteMonsterState[]) => void;
   onAttack?: (a: AttackEvent) => void;
   onHit?: (h: HitEvent) => void;
+  onWave?: (wave: number) => void;
 }
 
 function uid() {
@@ -93,6 +104,8 @@ export const useNet = create<NetState>((set, get) => ({
   isHost: false,
   worldSeed: 0,
   attacks: [],
+  remoteSnaps: [],
+  lastRemoteAttackT: 0,
   setName: (n) => set({ myName: n }),
   setRole: (r) => set({ myRole: r }),
 
@@ -185,12 +198,22 @@ export const useNet = create<NetState>((set, get) => ({
     if (!ch || !get().connected || !get().isHost) return;
     ch.send({ type: "broadcast", event: "monsters", payload: { list, t: Date.now() } });
   },
+
+  broadcastWave: (wave) => {
+    const ch = get().channel;
+    if (!ch || !get().connected || !get().isHost) return;
+    ch.send({ type: "broadcast", event: "wave", payload: { wave } });
+  },
 }));
 
 function wireChannel(channel: any, get: () => NetState, set: (p: Partial<NetState>) => void, isHost: boolean) {
   channel.on("broadcast", { event: "player" }, (msg: any) => {
     const p = msg.payload;
     if (p.id === get().myId) return;
+    const now = Date.now();
+    const snaps = get().remoteSnaps.slice();
+    snaps.push({ x: p.x, z: p.z, rot: p.rot, t: now });
+    while (snaps.length > 12) snaps.shift();
     set({
       remote: {
         id: p.id,
@@ -201,11 +224,13 @@ function wireChannel(channel: any, get: () => NetState, set: (p: Partial<NetStat
         rot: p.rot,
         hp: p.hp,
         weapon: p.weapon,
-        lastSeen: Date.now(),
+        lastSeen: now,
       },
+      remoteSnaps: snaps,
     });
   });
   channel.on("broadcast", { event: "attack" }, (msg: any) => {
+    set({ lastRemoteAttackT: Date.now() });
     const fn = get().onAttack;
     if (fn) fn(msg.payload);
   });
@@ -216,6 +241,12 @@ function wireChannel(channel: any, get: () => NetState, set: (p: Partial<NetStat
   channel.on("broadcast", { event: "monsters" }, (msg: any) => {
     const fn = get().onMonsters;
     if (fn && !get().isHost) fn(msg.payload.list);
+  });
+  channel.on("broadcast", { event: "wave" }, (msg: any) => {
+    if (!get().isHost) {
+      const fn = get().onWave;
+      if (fn) fn(msg.payload.wave);
+    }
   });
   channel.on("broadcast", { event: "hello" }, () => {
     if (isHost) {

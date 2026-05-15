@@ -4,7 +4,7 @@ import { CapsuleCollider, RigidBody, type RapierRigidBody } from "@react-three/r
 import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
-import { CharacterModel, GroundShadow } from "./Character";
+import { CharacterModel, GroundShadow, type CharacterMotion } from "./Character";
 import { useInput } from "../input";
 import { HUSBAND_WEAPONS, WEAPONS, WIFE_WEAPONS, useGame } from "../store";
 import { useNet } from "../net";
@@ -20,12 +20,12 @@ interface Props {
 export function LocalPlayer({ positionRef }: Props) {
   const body = useRef<RapierRigidBody>(null!);
   const modelRef = useRef<THREE.Group>(null!);
-  const innerRef = useRef<THREE.Group>(null!);
   const facing = useRef(0);
   const lastAttack = useRef(0);
   const hitFlash = useRef(0);
   const moveT = useRef(0);
   const sinceAttack = useRef(99);
+  const motionRef = useRef<CharacterMotion>({ armSwing: 0, legSwing: 0, bob: 0, lean: 0, attackPose: 0 });
   const myRole = useNet((s) => s.myRole);
   const enabled = useNet((s) => s.enabled);
   const broadcastSelf = useNet((s) => s.broadcastSelf);
@@ -67,11 +67,12 @@ export function LocalPlayer({ positionRef }: Props) {
         modelRef.current.position.set(t.x, 0.1, t.z);
         modelRef.current.rotation.set(Math.PI / 2, facing.current, 0);
       }
-      if (innerRef.current) {
-        innerRef.current.position.y = 0;
-        innerRef.current.rotation.set(0, 0, 0);
-        innerRef.current.scale.set(1, 1, 1);
-      }
+      const m = motionRef.current;
+      m.armSwing = 0;
+      m.legSwing = 0;
+      m.bob = 0;
+      m.lean = 0;
+      m.attackPose = 0;
       if (enabled) {
         lastBroadcast.current += dt;
         if (lastBroadcast.current >= 0.066) {
@@ -100,22 +101,24 @@ export function LocalPlayer({ positionRef }: Props) {
     }
     sinceAttack.current += dt;
     if (moveMag > 0.05) {
-      moveT.current += dt * (8 + moveMag * 4);
+      moveT.current += dt * (7 + moveMag * 4);
     } else {
       moveT.current += dt * 2;
     }
-    if (innerRef.current) {
-      const bobAmp = moveMag > 0.05 ? 0.08 : 0.02;
-      const bob = Math.abs(Math.sin(moveT.current)) * bobAmp;
-      innerRef.current.position.y = bob;
-      const leanZ = moveMag * 0.18;
-      innerRef.current.rotation.x = leanZ;
-      const lungeT = Math.max(0, 1 - sinceAttack.current / 0.22);
-      const lunge = lungeT * lungeT * 0.45;
-      innerRef.current.rotation.x += lunge;
-      const sq = moveMag > 0.05 ? 1 - Math.sin(moveT.current * 2) * 0.04 : 1;
-      innerRef.current.scale.set(1, sq, 1);
+    const m = motionRef.current;
+    if (moveMag > 0.05) {
+      m.armSwing = Math.sin(moveT.current) * Math.min(1, moveMag * 1.3);
+      m.legSwing = Math.sin(moveT.current) * Math.min(1, moveMag * 1.3);
+      m.bob = Math.abs(Math.sin(moveT.current * 2)) * 0.06;
+      m.lean = moveMag * 0.28;
+    } else {
+      m.armSwing *= 0.85;
+      m.legSwing *= 0.85;
+      m.bob *= 0.85;
+      m.lean *= 0.85;
     }
+    const lungeT = Math.max(0, 1 - sinceAttack.current / 0.25);
+    m.attackPose = lungeT * lungeT;
 
     const r = Math.hypot(t.x, t.z);
     if (r > ARENA_RADIUS - 0.6) {
@@ -258,105 +261,175 @@ export function LocalPlayer({ positionRef }: Props) {
       </RigidBody>
       <group ref={modelRef}>
         <GroundShadow size={0.7} />
-        <group ref={innerRef}>
-          <CharacterModel role={myRole} hitFlash={hitFlash.current} />
-          <WeaponHeld weapon={myWeaponId} />
-        </group>
+        <CharacterModel
+          role={myRole}
+          hitFlash={hitFlash.current}
+          motion={motionRef}
+          weapon={<WeaponHeld weapon={myWeaponId} />}
+        />
       </group>
     </>
   );
 }
 
-function WeaponHeld({ weapon }: { weapon: string }) {
+export function WeaponHeld({ weapon }: { weapon: string }) {
   switch (weapon) {
     case "hammer":
       return (
-        <group position={[0.45, 0.8, 0.25]} rotation={[0.4, 0.3, -0.2]}>
-          <mesh castShadow position={[0, 0.3, 0]}>
-            <cylinderGeometry args={[0.06, 0.06, 0.9, 8]} />
-            <meshStandardMaterial color="#6a4a2e" />
+        <group rotation={[0.3, 0.2, -0.15]}>
+          <mesh castShadow position={[0, 0.32, 0]}>
+            <cylinderGeometry args={[0.05, 0.07, 0.7, 12]} />
+            <meshStandardMaterial color="#3d2410" roughness={0.65} metalness={0.1} />
           </mesh>
-          <mesh castShadow position={[0, 0.85, 0]}>
-            <boxGeometry args={[0.32, 0.32, 0.6]} />
-            <meshStandardMaterial color="#7a7a82" metalness={0.6} roughness={0.4} />
+          <mesh castShadow position={[0, 0.04, 0]}>
+            <cylinderGeometry args={[0.08, 0.08, 0.08, 12]} />
+            <meshStandardMaterial color="#0a0414" roughness={0.5} metalness={0.4} />
+          </mesh>
+          <mesh castShadow position={[0, 0.75, 0]}>
+            <boxGeometry args={[0.34, 0.32, 0.62]} />
+            <meshStandardMaterial color="#8c93a3" metalness={0.78} roughness={0.28} />
+          </mesh>
+          <mesh castShadow position={[0, 0.75, 0.32]}>
+            <boxGeometry args={[0.36, 0.04, 0.02]} />
+            <meshStandardMaterial color="#ffd84d" emissive="#ffb733" emissiveIntensity={0.9} toneMapped={false} />
+          </mesh>
+          <mesh castShadow position={[0, 0.75, -0.32]}>
+            <boxGeometry args={[0.36, 0.04, 0.02]} />
+            <meshStandardMaterial color="#ffd84d" emissive="#ffb733" emissiveIntensity={0.9} toneMapped={false} />
           </mesh>
         </group>
       );
     case "greatsword":
       return (
-        <group position={[0.4, 0.7, 0.2]} rotation={[1.2, 0.3, 0]}>
-          <mesh castShadow position={[0, 0.45, 0]}>
-            <boxGeometry args={[0.1, 1.1, 0.02]} />
-            <meshStandardMaterial color="#dadada" metalness={0.8} roughness={0.2} />
+        <group rotation={[1.0, 0.2, 0]}>
+          <mesh castShadow position={[0, 0.04, 0]}>
+            <cylinderGeometry args={[0.05, 0.05, 0.22, 12]} />
+            <meshStandardMaterial color="#3d2410" roughness={0.65} />
           </mesh>
-          <mesh castShadow position={[0, -0.05, 0]}>
-            <boxGeometry args={[0.3, 0.06, 0.05]} />
-            <meshStandardMaterial color="#7a5a3a" />
+          <mesh castShadow position={[0, 0.2, 0]}>
+            <boxGeometry args={[0.36, 0.08, 0.08]} />
+            <meshStandardMaterial color="#ffd84d" metalness={0.7} roughness={0.35} emissive="#7a4a00" emissiveIntensity={0.3} />
+          </mesh>
+          <mesh castShadow position={[0, 0.85, 0]}>
+            <boxGeometry args={[0.12, 1.2, 0.04]} />
+            <meshStandardMaterial color="#e8edf2" metalness={0.85} roughness={0.18} />
+          </mesh>
+          <mesh castShadow position={[0, 0.85, 0]}>
+            <boxGeometry args={[0.04, 1.2, 0.06]} />
+            <meshStandardMaterial color="#c9ecff" emissive="#39c6ff" emissiveIntensity={0.85} toneMapped={false} />
+          </mesh>
+          <mesh castShadow position={[0, 1.5, 0]}>
+            <coneGeometry args={[0.06, 0.16, 4]} />
+            <meshStandardMaterial color="#e8edf2" metalness={0.85} roughness={0.18} />
           </mesh>
         </group>
       );
     case "pan":
       return (
-        <group position={[0.45, 0.7, 0.2]} rotation={[1, 0.3, 0]}>
-          <mesh castShadow position={[0, 0.45, 0]}>
-            <cylinderGeometry args={[0.32, 0.32, 0.06, 18]} />
-            <meshStandardMaterial color="#1a1a1a" metalness={0.5} roughness={0.6} />
+        <group rotation={[1.0, 0.2, 0]}>
+          <mesh castShadow position={[0, 0.04, 0]}>
+            <cylinderGeometry args={[0.05, 0.06, 0.16, 12]} />
+            <meshStandardMaterial color="#2c1410" roughness={0.7} />
           </mesh>
-          <mesh castShadow position={[0, 0.0, 0]}>
-            <boxGeometry args={[0.08, 0.5, 0.05]} />
-            <meshStandardMaterial color="#3a1a1a" />
+          <mesh castShadow position={[0, 0.32, 0]}>
+            <boxGeometry args={[0.09, 0.5, 0.05]} />
+            <meshStandardMaterial color="#3a1a1a" roughness={0.5} metalness={0.2} />
+          </mesh>
+          <mesh castShadow position={[0, 0.66, 0]}>
+            <cylinderGeometry args={[0.34, 0.34, 0.08, 24]} />
+            <meshStandardMaterial color="#1a1a1a" metalness={0.55} roughness={0.45} />
+          </mesh>
+          <mesh position={[0, 0.71, 0]}>
+            <cylinderGeometry args={[0.3, 0.3, 0.005, 24]} />
+            <meshStandardMaterial color="#3a2a1c" roughness={0.6} />
           </mesh>
         </group>
       );
     case "leek":
       return (
-        <group position={[0.4, 0.8, 0.2]} rotation={[1.2, 0.4, 0]}>
-          <mesh castShadow position={[0, 0.0, 0]}>
-            <cylinderGeometry args={[0.04, 0.06, 0.5, 8]} />
-            <meshStandardMaterial color="#f8f8f0" />
+        <group rotation={[1.0, 0.3, 0]}>
+          <mesh castShadow position={[0, 0.04, 0]}>
+            <cylinderGeometry args={[0.05, 0.07, 0.55, 12]} />
+            <meshStandardMaterial color="#f8f8f0" roughness={0.7} />
           </mesh>
-          <mesh castShadow position={[0, 0.4, 0]}>
-            <cylinderGeometry args={[0.05, 0.04, 0.6, 8]} />
-            <meshStandardMaterial color="#3fa54a" />
+          <mesh castShadow position={[0, 0.58, 0]}>
+            <cylinderGeometry args={[0.06, 0.04, 0.6, 12]} />
+            <meshStandardMaterial color="#3fa54a" roughness={0.55} emissive="#1a4a1a" emissiveIntensity={0.18} />
+          </mesh>
+          <mesh castShadow position={[0.04, 0.82, 0]} rotation={[0, 0, 0.3]}>
+            <cylinderGeometry args={[0.04, 0.02, 0.3, 8]} />
+            <meshStandardMaterial color="#5fbb5a" roughness={0.55} />
+          </mesh>
+          <mesh castShadow position={[-0.04, 0.82, 0]} rotation={[0, 0, -0.3]}>
+            <cylinderGeometry args={[0.04, 0.02, 0.3, 8]} />
+            <meshStandardMaterial color="#5fbb5a" roughness={0.55} />
           </mesh>
         </group>
       );
     case "bazooka":
       return (
-        <group position={[0.4, 0.9, 0.2]} rotation={[0, 0, 0]}>
-          <mesh castShadow position={[0, 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
-            <cylinderGeometry args={[0.16, 0.16, 0.8, 14]} />
-            <meshStandardMaterial color="#3a4a3a" />
+        <group rotation={[Math.PI / 2 - 0.2, 0, 0]} position={[0, 0.12, 0.12]}>
+          <mesh castShadow rotation={[Math.PI / 2, 0, 0]}>
+            <cylinderGeometry args={[0.16, 0.16, 0.95, 18]} />
+            <meshStandardMaterial color="#3a4a3a" metalness={0.55} roughness={0.45} />
           </mesh>
-          <mesh castShadow position={[0, 0, 0.45]} rotation={[Math.PI / 2, 0, 0]}>
-            <cylinderGeometry args={[0.22, 0.22, 0.1, 14]} />
-            <meshStandardMaterial color="#2a3a2a" />
+          <mesh castShadow position={[0, 0, 0.52]} rotation={[Math.PI / 2, 0, 0]}>
+            <cylinderGeometry args={[0.22, 0.16, 0.08, 18]} />
+            <meshStandardMaterial color="#1f2a1f" metalness={0.7} roughness={0.35} />
+          </mesh>
+          <mesh castShadow position={[0, 0.12, -0.2]}>
+            <boxGeometry args={[0.08, 0.18, 0.1]} />
+            <meshStandardMaterial color="#241a14" roughness={0.5} />
+          </mesh>
+          <mesh castShadow position={[0, 0.22, 0.1]}>
+            <boxGeometry args={[0.1, 0.06, 0.4]} />
+            <meshStandardMaterial color="#1a1a1a" metalness={0.6} roughness={0.3} />
+          </mesh>
+          <mesh position={[0, 0, -0.5]} rotation={[Math.PI / 2, 0, 0]}>
+            <cylinderGeometry args={[0.12, 0.12, 0.04, 18]} />
+            <meshBasicMaterial color="#ff5c1f" toneMapped={false} />
           </mesh>
         </group>
       );
     case "flamethrower":
       return (
-        <group position={[0.4, 0.85, 0.2]}>
-          <mesh castShadow rotation={[Math.PI / 2, 0, 0]} position={[0, 0, 0.2]}>
-            <cylinderGeometry args={[0.1, 0.1, 0.5, 12]} />
-            <meshStandardMaterial color="#5b3a2a" metalness={0.4} />
+        <group rotation={[Math.PI / 2 - 0.2, 0, 0]} position={[0, 0.05, 0.05]}>
+          <mesh castShadow rotation={[Math.PI / 2, 0, 0]} position={[0, 0, 0.25]}>
+            <cylinderGeometry args={[0.08, 0.08, 0.55, 14]} />
+            <meshStandardMaterial color="#3a2a20" metalness={0.55} roughness={0.4} />
           </mesh>
-          <mesh castShadow position={[0, -0.05, -0.15]}>
-            <boxGeometry args={[0.18, 0.32, 0.22]} />
-            <meshStandardMaterial color="#a83a3a" />
+          <mesh castShadow position={[0, 0, 0.55]} rotation={[Math.PI / 2, 0, 0]}>
+            <cylinderGeometry args={[0.11, 0.06, 0.12, 14]} />
+            <meshStandardMaterial color="#a04018" metalness={0.65} roughness={0.35} />
+          </mesh>
+          <mesh castShadow position={[0, -0.05, -0.18]}>
+            <boxGeometry args={[0.18, 0.34, 0.24]} />
+            <meshStandardMaterial color="#7a1a1a" roughness={0.55} metalness={0.2} />
+          </mesh>
+          <mesh castShadow position={[-0.12, 0.05, -0.18]}>
+            <cylinderGeometry args={[0.06, 0.06, 0.32, 14]} />
+            <meshStandardMaterial color="#3a3a3a" metalness={0.7} roughness={0.25} />
+          </mesh>
+          <mesh castShadow position={[0.12, 0.05, -0.18]}>
+            <cylinderGeometry args={[0.06, 0.06, 0.32, 14]} />
+            <meshStandardMaterial color="#3a3a3a" metalness={0.7} roughness={0.25} />
           </mesh>
         </group>
       );
     case "squeaky":
       return (
-        <group position={[0.4, 0.8, 0.2]} rotation={[0.4, 0.3, -0.2]}>
-          <mesh castShadow position={[0, 0.3, 0]}>
-            <cylinderGeometry args={[0.05, 0.05, 0.6, 8]} />
-            <meshStandardMaterial color="#9a6a3a" />
+        <group rotation={[0.3, 0.2, -0.15]}>
+          <mesh castShadow position={[0, 0.32, 0]}>
+            <cylinderGeometry args={[0.04, 0.05, 0.55, 12]} />
+            <meshStandardMaterial color="#9a6a3a" roughness={0.7} />
           </mesh>
           <mesh castShadow position={[0, 0.7, 0]}>
             <boxGeometry args={[0.32, 0.28, 0.4]} />
-            <meshStandardMaterial color="#ff5c8a" emissive="#ff2a5a" emissiveIntensity={0.3} />
+            <meshStandardMaterial color="#ff5c8a" emissive="#ff2a5a" emissiveIntensity={0.7} roughness={0.5} />
+          </mesh>
+          <mesh position={[0, 0.7, 0.22]}>
+            <sphereGeometry args={[0.05, 14, 14]} />
+            <meshBasicMaterial color="#fff" toneMapped={false} />
           </mesh>
         </group>
       );

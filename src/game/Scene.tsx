@@ -27,7 +27,7 @@ export function Scene() {
   const enabled = useNet((s) => s.enabled);
 
   useEffect(() => {
-    camera.position.set(0, 14, 14);
+    camera.position.set(0, 18, 16);
     camera.lookAt(0, 0, 0);
   }, [camera]);
 
@@ -47,7 +47,7 @@ export function Scene() {
       close = d < 4;
     }
     useGame.getState().setPartnerBonus(close);
-    const desired = new THREE.Vector3(cx, 14, cz + 11);
+    const desired = new THREE.Vector3(cx, 18, cz + 14);
     camera.position.lerp(desired, Math.min(1, dt * 3));
     const shake = useShake.getState().consume(dt);
     if (shake > 0) {

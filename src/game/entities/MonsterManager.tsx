@@ -95,8 +95,10 @@ export function MonsterManager({ playerRef }: Props) {
       if (wave >= 2 && r > 0.7) type = "runner";
       if (wave >= 3 && r > 0.85) type = "tank";
       if (wave >= 2 && r > 0.55 && r < 0.7) type = "spike";
-      const ang = rng() * Math.PI * 2;
-      const dist = ARENA_RADIUS - 1.5 - rng() * 2;
+      const baseAng = (i / count) * Math.PI * 2;
+      const jitter = (rng() - 0.5) * (Math.PI * 2 / count);
+      const ang = baseAng + jitter;
+      const dist = 10.5 + rng() * 3;
       list.push({
         id: ++monsterId,
         def: TYPES[type],
@@ -147,8 +149,14 @@ export function MonsterManager({ playerRef }: Props) {
       }
     };
     useNet.setState({ onHit: fn });
+
+    const onWave = (w: number) => {
+      useGame.getState().setWave(w);
+    };
+    useNet.setState({ onWave });
+
     return () => {
-      useNet.setState({ onHit: undefined });
+      useNet.setState({ onHit: undefined, onWave: undefined });
     };
   }, []);
 
@@ -390,26 +398,60 @@ function MonsterBody({
 
 function MonsterMesh({ def }: { def: MonsterDef }) {
   const ref = useRef<THREE.Group>(null!);
+  const bodyRef = useRef<THREE.Mesh>(null!);
+  const leftLegRef = useRef<THREE.Group>(null!);
+  const rightLegRef = useRef<THREE.Group>(null!);
+  const jawRef = useRef<THREE.Group>(null!);
+  const phase = useRef(Math.random() * Math.PI * 2);
+
   useFrame((_, dt) => {
-    if (ref.current) {
-      ref.current.children[0].scale.y = 1 + Math.sin(performance.now() * 0.006) * 0.06;
+    phase.current += dt;
+    const t = phase.current;
+    if (bodyRef.current) {
+      const sq = 1 + Math.sin(t * 6) * 0.08;
+      bodyRef.current.scale.set(1 / Math.sqrt(sq), sq, 1 / Math.sqrt(sq));
+    }
+    if (leftLegRef.current) leftLegRef.current.rotation.x = Math.sin(t * 12) * 0.45;
+    if (rightLegRef.current) rightLegRef.current.rotation.x = -Math.sin(t * 12) * 0.45;
+    if (jawRef.current) {
+      jawRef.current.rotation.x = 0.18 + Math.abs(Math.sin(t * 4)) * 0.18;
     }
   });
 
   if (def.type === "spike") {
     return (
       <group ref={ref} scale={def.scale}>
-        <mesh castShadow>
+        <mesh castShadow ref={bodyRef}>
           <icosahedronGeometry args={[0.55, 0]} />
-          <meshStandardMaterial color={def.color} roughness={0.5} flatShading />
+          <meshStandardMaterial
+            color={def.color}
+            roughness={0.35}
+            metalness={0.35}
+            flatShading
+            emissive={def.color}
+            emissiveIntensity={0.35}
+          />
         </mesh>
-        <mesh position={[0, 0.45, 0.3]}>
-          <sphereGeometry args={[0.07, 8, 8]} />
-          <meshBasicMaterial color="#fff" />
+        <mesh>
+          <icosahedronGeometry args={[0.28, 0]} />
+          <meshBasicMaterial color="#aaffd8" toneMapped={false} transparent opacity={0.85} />
         </mesh>
-        <mesh position={[0, 0.45, 0.45]}>
-          <sphereGeometry args={[0.04, 8, 8]} />
-          <meshBasicMaterial color="#000" />
+        <pointLight color={def.color} intensity={3.5} distance={3.2} />
+        <mesh position={[-0.1, 0.18, 0.42]}>
+          <sphereGeometry args={[0.07, 14, 14]} />
+          <meshBasicMaterial color="#ffffff" toneMapped={false} />
+        </mesh>
+        <mesh position={[0.1, 0.18, 0.42]}>
+          <sphereGeometry args={[0.07, 14, 14]} />
+          <meshBasicMaterial color="#ffffff" toneMapped={false} />
+        </mesh>
+        <mesh position={[-0.1, 0.18, 0.48]}>
+          <sphereGeometry args={[0.035, 12, 12]} />
+          <meshStandardMaterial color="#1a0a14" />
+        </mesh>
+        <mesh position={[0.1, 0.18, 0.48]}>
+          <sphereGeometry args={[0.035, 12, 12]} />
+          <meshStandardMaterial color="#1a0a14" />
         </mesh>
       </group>
     );
@@ -417,51 +459,112 @@ function MonsterMesh({ def }: { def: MonsterDef }) {
   if (def.type === "tank") {
     return (
       <group ref={ref} scale={def.scale}>
-        <mesh castShadow position={[0, 0, 0]}>
-          <sphereGeometry args={[0.7, 14, 14]} />
-          <meshStandardMaterial color={def.color} roughness={0.65} />
+        <mesh castShadow position={[0, -0.15, 0]} ref={bodyRef}>
+          <sphereGeometry args={[0.7, 22, 18]} />
+          <meshStandardMaterial color={def.color} roughness={0.55} metalness={0.18} emissive="#5a1a00" emissiveIntensity={0.2} />
         </mesh>
-        <mesh position={[0, 0.55, 0.45]}>
-          <sphereGeometry args={[0.1, 10, 10]} />
-          <meshBasicMaterial color="#fff" />
+        <mesh castShadow position={[0, 0.2, 0]}>
+          <sphereGeometry args={[0.55, 22, 18]} />
+          <meshStandardMaterial color={def.color} roughness={0.55} metalness={0.18} />
         </mesh>
-        <mesh position={[0, 0.55, 0.6]}>
-          <sphereGeometry args={[0.05, 10, 10]} />
-          <meshBasicMaterial color="#000" />
+        {Array.from({ length: 6 }).map((_, i) => {
+          const a = (i / 6) * Math.PI * 2;
+          return (
+            <mesh
+              key={i}
+              castShadow
+              position={[Math.cos(a) * 0.68, -0.05, Math.sin(a) * 0.68]}
+              rotation={[0, -a, Math.PI / 6]}
+            >
+              <coneGeometry args={[0.16, 0.42, 6]} />
+              <meshStandardMaterial color="#3a1810" roughness={0.45} metalness={0.6} />
+            </mesh>
+          );
+        })}
+        <group ref={jawRef} position={[0, 0.0, 0.5]}>
+          <mesh castShadow>
+            <boxGeometry args={[0.4, 0.1, 0.2]} />
+            <meshStandardMaterial color="#3a1010" roughness={0.4} />
+          </mesh>
+          <mesh position={[-0.12, 0.05, 0.1]} rotation={[Math.PI, 0, 0]}>
+            <coneGeometry args={[0.04, 0.1, 4]} />
+            <meshStandardMaterial color="#fff" />
+          </mesh>
+          <mesh position={[0, 0.05, 0.1]} rotation={[Math.PI, 0, 0]}>
+            <coneGeometry args={[0.04, 0.1, 4]} />
+            <meshStandardMaterial color="#fff" />
+          </mesh>
+          <mesh position={[0.12, 0.05, 0.1]} rotation={[Math.PI, 0, 0]}>
+            <coneGeometry args={[0.04, 0.1, 4]} />
+            <meshStandardMaterial color="#fff" />
+          </mesh>
+        </group>
+        <mesh position={[-0.18, 0.45, 0.48]}>
+          <sphereGeometry args={[0.11, 16, 16]} />
+          <meshStandardMaterial color="#ffffff" emissive="#ff7a00" emissiveIntensity={1.4} toneMapped={false} />
         </mesh>
-        <mesh position={[-0.5, 0.3, 0]} rotation={[0, 0, -0.4]}>
-          <coneGeometry args={[0.18, 0.4, 5]} />
-          <meshStandardMaterial color="#a04a18" />
+        <mesh position={[0.18, 0.45, 0.48]}>
+          <sphereGeometry args={[0.11, 16, 16]} />
+          <meshStandardMaterial color="#ffffff" emissive="#ff7a00" emissiveIntensity={1.4} toneMapped={false} />
         </mesh>
-        <mesh position={[0.5, 0.3, 0]} rotation={[0, 0, 0.4]}>
-          <coneGeometry args={[0.18, 0.4, 5]} />
-          <meshStandardMaterial color="#a04a18" />
+        <mesh position={[-0.18, 0.45, 0.55]}>
+          <sphereGeometry args={[0.045, 12, 12]} />
+          <meshBasicMaterial color="#1a0a14" />
         </mesh>
+        <mesh position={[0.18, 0.45, 0.55]}>
+          <sphereGeometry args={[0.045, 12, 12]} />
+          <meshBasicMaterial color="#1a0a14" />
+        </mesh>
+        <pointLight position={[0, 0.45, 0.5]} color="#ff8a3a" intensity={3.5} distance={3} />
       </group>
     );
   }
   if (def.type === "runner") {
     return (
       <group ref={ref} scale={def.scale}>
-        <mesh castShadow>
-          <capsuleGeometry args={[0.32, 0.4, 6, 10]} />
-          <meshStandardMaterial color={def.color} roughness={0.5} />
+        <mesh castShadow ref={bodyRef}>
+          <capsuleGeometry args={[0.3, 0.42, 10, 18]} />
+          <meshStandardMaterial color={def.color} roughness={0.4} metalness={0.2} emissive={def.color} emissiveIntensity={0.3} />
         </mesh>
-        <mesh position={[-0.1, 0.42, 0.27]}>
-          <sphereGeometry args={[0.07, 10, 10]} />
-          <meshBasicMaterial color="#fff" />
+        <group ref={leftLegRef} position={[-0.22, -0.32, 0]}>
+          <mesh castShadow position={[0, -0.18, 0.1]} rotation={[0.6, 0, 0]}>
+            <cylinderGeometry args={[0.05, 0.03, 0.36, 8]} />
+            <meshStandardMaterial color="#3a0a24" roughness={0.45} metalness={0.4} />
+          </mesh>
+        </group>
+        <group ref={rightLegRef} position={[0.22, -0.32, 0]}>
+          <mesh castShadow position={[0, -0.18, 0.1]} rotation={[0.6, 0, 0]}>
+            <cylinderGeometry args={[0.05, 0.03, 0.36, 8]} />
+            <meshStandardMaterial color="#3a0a24" roughness={0.45} metalness={0.4} />
+          </mesh>
+        </group>
+        <mesh castShadow position={[-0.22, -0.35, -0.05]} rotation={[-0.4, 0, 0]}>
+          <cylinderGeometry args={[0.04, 0.025, 0.3, 8]} />
+          <meshStandardMaterial color="#3a0a24" roughness={0.45} metalness={0.4} />
         </mesh>
-        <mesh position={[0.1, 0.42, 0.27]}>
-          <sphereGeometry args={[0.07, 10, 10]} />
-          <meshBasicMaterial color="#fff" />
+        <mesh castShadow position={[0.22, -0.35, -0.05]} rotation={[-0.4, 0, 0]}>
+          <cylinderGeometry args={[0.04, 0.025, 0.3, 8]} />
+          <meshStandardMaterial color="#3a0a24" roughness={0.45} metalness={0.4} />
         </mesh>
-        <mesh position={[-0.1, 0.42, 0.33]}>
-          <sphereGeometry args={[0.04, 10, 10]} />
-          <meshBasicMaterial color="#000" />
+        <mesh position={[-0.1, 0.4, 0.28]}>
+          <sphereGeometry args={[0.08, 16, 16]} />
+          <meshStandardMaterial color="#ffffff" emissive="#ff5cbd" emissiveIntensity={1.5} toneMapped={false} />
         </mesh>
-        <mesh position={[0.1, 0.42, 0.33]}>
-          <sphereGeometry args={[0.04, 10, 10]} />
-          <meshBasicMaterial color="#000" />
+        <mesh position={[0.1, 0.4, 0.28]}>
+          <sphereGeometry args={[0.08, 16, 16]} />
+          <meshStandardMaterial color="#ffffff" emissive="#ff5cbd" emissiveIntensity={1.5} toneMapped={false} />
+        </mesh>
+        <mesh position={[-0.1, 0.4, 0.34]}>
+          <sphereGeometry args={[0.035, 10, 10]} />
+          <meshBasicMaterial color="#1a0a14" />
+        </mesh>
+        <mesh position={[0.1, 0.4, 0.34]}>
+          <sphereGeometry args={[0.035, 10, 10]} />
+          <meshBasicMaterial color="#1a0a14" />
+        </mesh>
+        <mesh castShadow position={[0, 0.62, 0.1]} rotation={[0.4, 0, 0]}>
+          <coneGeometry args={[0.05, 0.4, 5]} />
+          <meshStandardMaterial color={def.color} emissive={def.color} emissiveIntensity={0.6} />
         </mesh>
       </group>
     );
@@ -469,67 +572,122 @@ function MonsterMesh({ def }: { def: MonsterDef }) {
   if (def.type === "boss") {
     return (
       <group ref={ref} scale={def.scale}>
-        <mesh castShadow>
-          <sphereGeometry args={[0.6, 18, 14]} />
-          <meshStandardMaterial color={def.color} roughness={0.55} emissive="#3a0010" emissiveIntensity={0.4} />
+        <mesh castShadow ref={bodyRef}>
+          <sphereGeometry args={[0.65, 32, 24]} />
+          <meshStandardMaterial
+            color={def.color}
+            roughness={0.45}
+            metalness={0.18}
+            emissive="#5a0010"
+            emissiveIntensity={0.55}
+          />
         </mesh>
-        <mesh position={[0, 0.65, 0]}>
-          <coneGeometry args={[0.3, 0.55, 5]} />
-          <meshStandardMaterial color="#3a0010" />
+        {[0, 1, 2, 3, 4].map((i) => {
+          const a = (i / 5) * Math.PI * 1.4 - Math.PI * 0.7;
+          return (
+            <mesh key={i} position={[Math.sin(a) * 0.7, 0.6, Math.cos(a) * 0.7]} rotation={[0, -a, 0]}>
+              <torusGeometry args={[0.25, 0.04, 6, 18]} />
+              <meshBasicMaterial color="#ff1a40" toneMapped={false} transparent opacity={0.8} />
+            </mesh>
+          );
+        })}
+        <mesh position={[0, 0.85, 0]}>
+          <coneGeometry args={[0.32, 0.6, 6]} />
+          <meshStandardMaterial color="#2a0008" roughness={0.4} metalness={0.5} />
         </mesh>
-        <mesh position={[-0.22, 0.45, 0.5]}>
-          <sphereGeometry args={[0.12, 12, 12]} />
-          <meshBasicMaterial color="#fff" />
+        <mesh position={[0, 1.1, 0]}>
+          <sphereGeometry args={[0.08, 14, 14]} />
+          <meshBasicMaterial color="#ff1a40" toneMapped={false} />
         </mesh>
-        <mesh position={[0.22, 0.45, 0.5]}>
-          <sphereGeometry args={[0.12, 12, 12]} />
-          <meshBasicMaterial color="#fff" />
+        <mesh position={[-0.45, 0.4, 0.35]} rotation={[0.6, -0.4, -0.7]}>
+          <coneGeometry args={[0.12, 0.55, 6]} />
+          <meshStandardMaterial color="#2a0008" roughness={0.4} metalness={0.55} />
         </mesh>
-        <mesh position={[-0.22, 0.45, 0.6]}>
-          <sphereGeometry args={[0.07, 10, 10]} />
-          <meshBasicMaterial color="#ff0000" />
+        <mesh position={[0.45, 0.4, 0.35]} rotation={[0.6, 0.4, 0.7]}>
+          <coneGeometry args={[0.12, 0.55, 6]} />
+          <meshStandardMaterial color="#2a0008" roughness={0.4} metalness={0.55} />
         </mesh>
-        <mesh position={[0.22, 0.45, 0.6]}>
-          <sphereGeometry args={[0.07, 10, 10]} />
-          <meshBasicMaterial color="#ff0000" />
+        <group ref={jawRef} position={[0, -0.18, 0.55]}>
+          <mesh castShadow>
+            <boxGeometry args={[0.42, 0.12, 0.22]} />
+            <meshStandardMaterial color="#3a0008" roughness={0.4} />
+          </mesh>
+          {[-0.14, -0.04, 0.06, 0.14].map((x) => (
+            <mesh key={x} position={[x, 0.06, 0.1]} rotation={[Math.PI, 0, 0]}>
+              <coneGeometry args={[0.04, 0.12, 4]} />
+              <meshStandardMaterial color="#fff" />
+            </mesh>
+          ))}
+        </group>
+        <mesh position={[-0.22, 0.18, 0.55]}>
+          <sphereGeometry args={[0.13, 18, 18]} />
+          <meshStandardMaterial color="#ffffff" emissive="#ff1a40" emissiveIntensity={1.6} toneMapped={false} />
         </mesh>
-        <mesh position={[-0.6, -0.05, 0]} rotation={[0, 0, -0.5]}>
-          <coneGeometry args={[0.18, 0.55, 5]} />
-          <meshStandardMaterial color="#7a0a20" />
+        <mesh position={[0.22, 0.18, 0.55]}>
+          <sphereGeometry args={[0.13, 18, 18]} />
+          <meshStandardMaterial color="#ffffff" emissive="#ff1a40" emissiveIntensity={1.6} toneMapped={false} />
         </mesh>
-        <mesh position={[0.6, -0.05, 0]} rotation={[0, 0, 0.5]}>
-          <coneGeometry args={[0.18, 0.55, 5]} />
-          <meshStandardMaterial color="#7a0a20" />
+        <mesh position={[-0.22, 0.18, 0.65]}>
+          <sphereGeometry args={[0.055, 12, 12]} />
+          <meshBasicMaterial color="#1a0008" />
         </mesh>
+        <mesh position={[0.22, 0.18, 0.65]}>
+          <sphereGeometry args={[0.055, 12, 12]} />
+          <meshBasicMaterial color="#1a0008" />
+        </mesh>
+        <mesh position={[-0.65, -0.1, 0]} rotation={[0, 0, -0.6]}>
+          <coneGeometry args={[0.2, 0.6, 6]} />
+          <meshStandardMaterial color="#3a000a" roughness={0.4} metalness={0.55} />
+        </mesh>
+        <mesh position={[0.65, -0.1, 0]} rotation={[0, 0, 0.6]}>
+          <coneGeometry args={[0.2, 0.6, 6]} />
+          <meshStandardMaterial color="#3a000a" roughness={0.4} metalness={0.55} />
+        </mesh>
+        <pointLight position={[0, 0.3, 0.6]} color="#ff1a40" intensity={8} distance={6} />
       </group>
     );
   }
   return (
     <group ref={ref} scale={def.scale}>
-      <mesh castShadow position={[0, 0, 0]}>
-        <sphereGeometry args={[0.55, 14, 12]} />
-        <meshStandardMaterial color={def.color} roughness={0.6} />
+      <mesh castShadow position={[0, -0.05, 0]} ref={bodyRef}>
+        <sphereGeometry args={[0.55, 24, 20]} />
+        <meshStandardMaterial
+          color={def.color}
+          roughness={0.45}
+          metalness={0.15}
+          transparent
+          opacity={0.92}
+          emissive={def.color}
+          emissiveIntensity={0.22}
+        />
       </mesh>
-      <mesh position={[-0.15, 0.35, 0.4]}>
-        <sphereGeometry args={[0.1, 10, 10]} />
-        <meshBasicMaterial color="#fff" />
+      <mesh position={[0, 0.1, 0]}>
+        <sphereGeometry args={[0.32, 18, 18]} />
+        <meshBasicMaterial color="#e8d4ff" toneMapped={false} transparent opacity={0.5} />
       </mesh>
-      <mesh position={[0.15, 0.35, 0.4]}>
-        <sphereGeometry args={[0.1, 10, 10]} />
-        <meshBasicMaterial color="#fff" />
+      <pointLight color={def.color} intensity={3.5} distance={3} />
+      <mesh position={[-0.15, 0.32, 0.4]}>
+        <sphereGeometry args={[0.1, 16, 16]} />
+        <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={0.6} toneMapped={false} />
       </mesh>
-      <mesh position={[-0.15, 0.35, 0.48]}>
-        <sphereGeometry args={[0.05, 10, 10]} />
-        <meshBasicMaterial color="#000" />
+      <mesh position={[0.15, 0.32, 0.4]}>
+        <sphereGeometry args={[0.1, 16, 16]} />
+        <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={0.6} toneMapped={false} />
       </mesh>
-      <mesh position={[0.15, 0.35, 0.48]}>
-        <sphereGeometry args={[0.05, 10, 10]} />
-        <meshBasicMaterial color="#000" />
+      <mesh position={[-0.15, 0.32, 0.48]}>
+        <sphereGeometry args={[0.05, 12, 12]} />
+        <meshBasicMaterial color="#1a0a14" />
       </mesh>
-      <mesh position={[0, 0.2, 0.48]}>
-        <boxGeometry args={[0.18, 0.05, 0.02]} />
-        <meshBasicMaterial color="#5b1a1a" />
+      <mesh position={[0.15, 0.32, 0.48]}>
+        <sphereGeometry args={[0.05, 12, 12]} />
+        <meshBasicMaterial color="#1a0a14" />
       </mesh>
+      <group ref={jawRef} position={[0, 0.16, 0.4]}>
+        <mesh>
+          <boxGeometry args={[0.22, 0.06, 0.08]} />
+          <meshStandardMaterial color="#5b1a1a" emissive="#3a0a10" emissiveIntensity={0.4} />
+        </mesh>
+      </group>
     </group>
   );
 }

@@ -96,6 +96,7 @@ interface GameState {
   setAlive: (n: number) => void;
   killMonster: () => void;
   nextWave: () => void;
+  setWave: (w: number) => void;
   pushFloater: (f: Omit<FloatingText, "id" | "born">) => void;
   pruneFloaters: () => void;
   dropItem: (type: ItemType, x: number, z: number) => void;
@@ -180,7 +181,14 @@ export const useGame = create<GameState>((set, get) => ({
   setWifeWeapon: (w) => set({ wifeWeapon: w }),
   setAlive: (n) => set({ monstersAlive: n }),
   killMonster: () => set((s) => ({ monstersKilled: s.monstersKilled + 1 })),
-  nextWave: () => set((s) => ({ wave: s.wave + 1, hpH: Math.min(100, s.hpH + 25), hpW: Math.min(100, s.hpW + 25) })),
+  nextWave: () =>
+    set((s) => {
+      const nw = s.wave + 1;
+      const net = useNet.getState();
+      if (net.enabled && net.isHost) net.broadcastWave(nw);
+      return { wave: nw, hpH: Math.min(100, s.hpH + 25), hpW: Math.min(100, s.hpW + 25) };
+    }),
+  setWave: (w) => set({ wave: w }),
   pushFloater: (f) =>
     set((s) => ({
       floaters: [...s.floaters.slice(-20), { ...f, id: ++floaterId, born: performance.now() }],

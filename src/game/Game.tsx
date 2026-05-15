@@ -43,7 +43,7 @@ export default function Game() {
       <Canvas
         shadows
         dpr={[1, 1.75]}
-        camera={{ position: [0, 14, 14], fov: 50 }}
+        camera={{ position: [0, 18, 16], fov: 58 }}
         gl={{
           antialias: true,
           powerPreference: "high-performance",
@@ -55,7 +55,7 @@ export default function Game() {
         }}
       >
         <color attach="background" args={["#0b0420"]} />
-        <fog attach="fog" args={["#0b0420", 26, 58]} />
+        <fog attach="fog" args={["#0b0420", 22, 72]} />
         <Suspense fallback={null}>
           <Physics gravity={[0, -30, 0]} debug={debug}>
             <Scene />
