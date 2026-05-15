@@ -43,7 +43,7 @@ export default function Game() {
     <div className="relative w-full h-full">
       <Canvas
         shadows
-        dpr={[1, 1.75]}
+        dpr={[1, 1.4]}
         camera={{ position: [0, 18, 16], fov: 58 }}
         gl={{
           antialias: true,

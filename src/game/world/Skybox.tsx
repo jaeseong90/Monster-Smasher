@@ -53,7 +53,7 @@ function Pillars({ accent, accentB }: { accent: string; accentB: string }) {
     const col = i % 2 === 0 ? accent : accentB;
     items.push(
       <group key={i} position={[x, 0, z]} rotation={[0, -a, 0]}>
-        <mesh castShadow position={[0, tall / 2, 0]}>
+        <mesh position={[0, tall / 2, 0]}>
           <boxGeometry args={[0.6, tall, 0.6]} />
           <meshStandardMaterial color="#1c0a30" roughness={0.55} metalness={0.4} />
         </mesh>
@@ -65,7 +65,6 @@ function Pillars({ accent, accentB }: { accent: string; accentB: string }) {
           <boxGeometry args={[0.4, 0.2, 0.06]} />
           <meshBasicMaterial color={col} transparent opacity={0.7} toneMapped={false} />
         </mesh>
-        <pointLight position={[0, tall - 0.2, 0]} color={col} intensity={3} distance={5} />
       </group>
     );
   }
@@ -94,7 +93,6 @@ function Monoliths({ color }: { color: string }) {
           <planeGeometry args={[1.6, 2.6]} />
           <meshBasicMaterial color={color} transparent opacity={0.55} toneMapped={false} />
         </mesh>
-        <pointLight position={[0, h - 0.5, 1.2]} color={color} intensity={2.5} distance={6} />
       </group>
     );
   }

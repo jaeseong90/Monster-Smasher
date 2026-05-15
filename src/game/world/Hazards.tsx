@@ -62,7 +62,6 @@ function SawBlade({ position, speed }: { position: [number, number, number]; spe
           </mesh>
         </RigidBody>
       </group>
-      <pointLight position={[0, 0, 0]} color="#ff5566" intensity={2.5} distance={3.5} />
     </group>
   );
 }
@@ -94,7 +93,6 @@ function Spikes({ position }: { position: [number, number, number] }) {
           <planeGeometry args={[2.6, 1.4]} />
           <meshBasicMaterial color="#ff2a4a" transparent opacity={0.18} toneMapped={false} />
         </mesh>
-        <pointLight position={[0, 0.6, 0]} color="#ff2a4a" intensity={1.5} distance={2.5} />
       </group>
     </RigidBody>
   );

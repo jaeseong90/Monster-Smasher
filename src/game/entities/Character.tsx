@@ -204,7 +204,6 @@ export const CharacterModel = forwardRef<THREE.Group, Props>(function CharacterM
               <sphereGeometry args={[0.06, 14, 14]} />
               <meshBasicMaterial color={accent} toneMapped={false} />
             </mesh>
-            <pointLight position={[0, 1.78, -0.04]} color={accent} intensity={2.2} distance={1.6} />
 
             <mesh castShadow position={[0, 0.62, -0.46]}>
               <boxGeometry args={[0.36, 0.5, 0.16]} />

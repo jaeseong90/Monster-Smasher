@@ -68,27 +68,26 @@ export function Scene() {
         castShadow
         position={[12, 22, 8]}
         intensity={2.2}
-        shadow-mapSize-width={2048}
-        shadow-mapSize-height={2048}
+        shadow-mapSize-width={1024}
+        shadow-mapSize-height={1024}
         shadow-bias={-0.0005}
         shadow-normalBias={0.04}
-        shadow-camera-left={-24}
-        shadow-camera-right={24}
-        shadow-camera-top={24}
-        shadow-camera-bottom={-24}
+        shadow-camera-left={-20}
+        shadow-camera-right={20}
+        shadow-camera-top={20}
+        shadow-camera-bottom={-20}
         color="#fff0d0"
       />
-      <pointLight position={[-10, 4, -8]} intensity={28} color="#ff4dbe" distance={22} decay={2} />
-      <pointLight position={[10, 4, 10]} intensity={26} color="#39f0ff" distance={22} decay={2} />
-      <pointLight position={[0, 12, -14]} intensity={18} color="#ffd76a" distance={26} decay={2} />
+      <pointLight position={[-10, 4, -8]} intensity={26} color="#ff4dbe" distance={20} decay={2} />
+      <pointLight position={[10, 4, 10]} intensity={24} color="#39f0ff" distance={20} decay={2} />
 
       <ContactShadows
         position={[0, 0.02, 0]}
-        opacity={0.55}
-        scale={42}
-        blur={2.4}
-        far={6}
-        resolution={1024}
+        opacity={0.5}
+        scale={32}
+        blur={2.2}
+        far={5}
+        resolution={512}
         color="#0a0214"
       />
 

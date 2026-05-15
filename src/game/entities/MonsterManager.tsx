@@ -436,7 +436,6 @@ function MonsterMesh({ def }: { def: MonsterDef }) {
           <icosahedronGeometry args={[0.28, 0]} />
           <meshBasicMaterial color="#aaffd8" toneMapped={false} transparent opacity={0.85} />
         </mesh>
-        <pointLight color={def.color} intensity={3.5} distance={3.2} />
         <mesh position={[-0.1, 0.18, 0.42]}>
           <sphereGeometry args={[0.07, 14, 14]} />
           <meshBasicMaterial color="#ffffff" toneMapped={false} />
@@ -515,7 +514,6 @@ function MonsterMesh({ def }: { def: MonsterDef }) {
           <sphereGeometry args={[0.045, 12, 12]} />
           <meshBasicMaterial color="#1a0a14" />
         </mesh>
-        <pointLight position={[0, 0.45, 0.5]} color="#ff8a3a" intensity={3.5} distance={3} />
       </group>
     );
   }
@@ -665,7 +663,6 @@ function MonsterMesh({ def }: { def: MonsterDef }) {
         <sphereGeometry args={[0.32, 18, 18]} />
         <meshBasicMaterial color="#e8d4ff" toneMapped={false} transparent opacity={0.5} />
       </mesh>
-      <pointLight color={def.color} intensity={3.5} distance={3} />
       <mesh position={[-0.15, 0.32, 0.4]}>
         <sphereGeometry args={[0.1, 16, 16]} />
         <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={0.6} toneMapped={false} />
