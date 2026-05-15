@@ -14,6 +14,7 @@ import { LoreIntro } from "./hud/LoreIntro";
 import { BiomeBanner } from "./hud/BiomeBanner";
 import { ChoreOverlay } from "./hud/ChoreOverlay";
 import { OrientationGate } from "./hud/OrientationGate";
+import { OnboardingHint } from "./hud/OnboardingHint";
 import { useGame } from "./store";
 import "./input";
 
@@ -70,6 +71,7 @@ export default function Game() {
           <HUD />
           <MobileControls />
           <BiomeBanner />
+          <OnboardingHint />
         </>
       )}
       {(status === "chore-pvp" || status === "chore-result") && <ChoreOverlay />}

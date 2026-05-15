@@ -26,12 +26,28 @@ export function BiomeBanner() {
 
   if (!show) return null;
   return (
-    <div className="pointer-events-none absolute top-1/3 left-1/2 -translate-x-1/2 z-20 text-center">
-      <div className="text-xs tracking-[0.4em] text-amber-300/90 uppercase">웨이브 {show.wave}</div>
-      <div className="text-4xl font-black text-white drop-shadow-[0_0_20px_rgba(255,200,80,0.5)] mt-1">
-        {show.name}
+    <div
+      key={show.wave}
+      className="pointer-events-none absolute top-[28%] left-1/2 -translate-x-1/2 z-20 text-center animate-[bannerIn_2.2s_ease-out_forwards]"
+    >
+      <div className="text-[10px] tracking-[0.55em] text-amber-300/85 uppercase">
+        Wave {String(show.wave).padStart(2, "0")}
       </div>
-      <div className="text-sm text-white/60 mt-1 italic">{show.desc}</div>
+      <div className="relative mt-1">
+        <div className="text-5xl font-black bg-gradient-to-br from-amber-100 via-amber-200 to-rose-200 bg-clip-text text-transparent drop-shadow-[0_0_28px_rgba(255,200,80,0.55)]">
+          {show.name}
+        </div>
+        <div className="absolute left-1/2 -bottom-2 -translate-x-1/2 h-px w-32 bg-gradient-to-r from-transparent via-amber-300/80 to-transparent" />
+      </div>
+      <div className="text-[13px] text-white/60 mt-4 italic tracking-wide">{show.desc}</div>
+      <style>{`
+        @keyframes bannerIn {
+          0% { opacity: 0; transform: translateX(-50%) translateY(12px) scale(0.96); }
+          12% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+          80% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+          100% { opacity: 0; transform: translateX(-50%) translateY(-6px) scale(0.98); }
+        }
+      `}</style>
     </div>
   );
 }

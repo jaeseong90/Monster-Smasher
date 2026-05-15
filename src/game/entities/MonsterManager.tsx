@@ -88,13 +88,13 @@ export function MonsterManager({ playerRef }: Props) {
       }
       return list;
     }
-    const count = Math.min(4 + wave * 2, 16);
+    const count = wave === 1 ? 4 : Math.min(3 + wave * 2, 16);
     for (let i = 0; i < count; i++) {
       const r = rng();
       let type: MonsterDef["type"] = "blob";
-      if (wave >= 2 && r > 0.7) type = "runner";
-      if (wave >= 3 && r > 0.85) type = "tank";
-      if (wave >= 2 && r > 0.55 && r < 0.7) type = "spike";
+      if (wave >= 3 && r > 0.72) type = "runner";
+      if (wave >= 4 && r > 0.86) type = "tank";
+      if (wave >= 2 && r > 0.6 && r < 0.72) type = "spike";
       const baseAng = (i / count) * Math.PI * 2;
       const jitter = (rng() - 0.5) * (Math.PI * 2 / count);
       const ang = baseAng + jitter;
