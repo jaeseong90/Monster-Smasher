@@ -71,6 +71,10 @@ export function HUD() {
         </div>
       )}
 
+      <PartnerBonusBadge />
+
+      <DropCount />
+
       <WeaponSwapper />
 
       <button
@@ -154,6 +158,26 @@ function WeaponSwapper() {
           </button>
         );
       })}
+    </div>
+  );
+}
+
+function PartnerBonusBadge() {
+  const bonus = useGame((s) => s.partnerBonus);
+  if (!bonus) return null;
+  return (
+    <div className="absolute top-32 right-3 bg-pink-400/90 text-black px-2.5 py-1 rounded-full text-xs font-black flex items-center gap-1 shadow-[0_0_20px_rgba(255,150,200,0.6)] animate-pulse">
+      💞 부부 콤보 ×1.5
+    </div>
+  );
+}
+
+function DropCount() {
+  const drops = useGame((s) => s.drops);
+  if (drops.length === 0) return null;
+  return (
+    <div className="absolute top-32 left-3 bg-black/45 backdrop-blur rounded-full px-2 py-1 text-xs text-white/85 border border-white/10">
+      💎 {drops.length}
     </div>
   );
 }

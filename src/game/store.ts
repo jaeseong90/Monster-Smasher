@@ -41,6 +41,16 @@ export const WIFE_WEAPONS: WeaponId[] = ["bazooka", "flamethrower", "leek", "squ
 
 export type GameStatus = "title" | "playing" | "paused" | "gameover";
 
+export type ItemType = "heart" | "ammo" | "star";
+
+export interface DropItem {
+  id: number;
+  type: ItemType;
+  x: number;
+  z: number;
+  born: number;
+}
+
 export interface FloatingText {
   id: number;
   text: string;
@@ -66,6 +76,8 @@ interface GameState {
   monstersAlive: number;
   monstersKilled: number;
   floaters: FloatingText[];
+  drops: DropItem[];
+  partnerBonus: boolean;
   start: () => void;
   reset: () => void;
   pause: () => void;
@@ -85,6 +97,12 @@ interface GameState {
   nextWave: () => void;
   pushFloater: (f: Omit<FloatingText, "id" | "born">) => void;
   pruneFloaters: () => void;
+  dropItem: (type: ItemType, x: number, z: number) => void;
+  collectDrop: (id: number) => void;
+  pruneDrops: () => void;
+  setPartnerBonus: (v: boolean) => void;
+  healHusband: (n: number) => void;
+  healWife: (n: number) => void;
 }
 
 let floaterId = 0;
@@ -106,6 +124,8 @@ export const useGame = create<GameState>((set, get) => ({
   monstersAlive: 0,
   monstersKilled: 0,
   floaters: [],
+  drops: [],
+  partnerBonus: false,
   start: () => set({ status: "playing", score: 0, combo: 0, wave: 1, hpH: 100, hpW: 100, downH: false, downW: false, cprH: 0, cprW: 0, monstersKilled: 0, floaters: [] }),
   reset: () => set({ status: "title", score: 0, combo: 0, wave: 1, hpH: 100, hpW: 100, downH: false, downW: false, cprH: 0, cprW: 0, monstersKilled: 0, floaters: [] }),
   pause: () => set({ status: "paused" }),
@@ -163,4 +183,17 @@ export const useGame = create<GameState>((set, get) => ({
     })),
   pruneFloaters: () =>
     set((s) => ({ floaters: s.floaters.filter((f) => performance.now() - f.born < 900) })),
+  dropItem: (type, x, z) =>
+    set((s) => ({
+      drops: [...s.drops.slice(-12), { id: ++dropId, type, x, z, born: performance.now() }],
+    })),
+  collectDrop: (id) =>
+    set((s) => ({ drops: s.drops.filter((d) => d.id !== id) })),
+  pruneDrops: () =>
+    set((s) => ({ drops: s.drops.filter((d) => performance.now() - d.born < 18000) })),
+  setPartnerBonus: (v) => set({ partnerBonus: v }),
+  healHusband: (n) => set((s) => ({ hpH: Math.min(100, s.hpH + n) })),
+  healWife: (n) => set((s) => ({ hpW: Math.min(100, s.hpW + n) })),
 }));
+
+let dropId = 0;

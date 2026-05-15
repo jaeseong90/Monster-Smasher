@@ -176,7 +176,37 @@ export function LocalPlayer({ positionRef }: Props) {
       else useGame.getState().damageWife(e.detail.amount);
     };
     window.addEventListener("local-hit" as any, handler as any);
-    return () => window.removeEventListener("local-hit" as any, handler as any);
+
+    const blast = (e: CustomEvent<{ x: number; z: number; radius: number; force: number; owner: "me" | "remote" }>) => {
+      if (!body.current) return;
+      const t = body.current.translation();
+      const dx = t.x - e.detail.x;
+      const dz = t.z - e.detail.z;
+      const dist = Math.hypot(dx, dz);
+      if (dist > e.detail.radius) return;
+      const fall = 1 - dist / e.detail.radius;
+      const nx = dx / Math.max(0.001, dist);
+      const nz = dz / Math.max(0.001, dist);
+      const force = e.detail.force * fall;
+      body.current.applyImpulse({ x: nx * force * 2, y: 8 + force * 0.2, z: nz * force * 2 }, true);
+      // 자기가 쏜 게 아니면 약간의 데미지 (자폭은 데미지 적게)
+      if (e.detail.owner === "me") {
+        if (myRole === "husband") useGame.getState().damageHusband(3);
+        else useGame.getState().damageWife(3);
+        useGame.getState().pushFloater({ text: "내가 쐈잖아 ㅋ", pos: [t.x, 1.5, t.z], color: "#ffe066" });
+      } else {
+        if (myRole === "husband") useGame.getState().damageHusband(6);
+        else useGame.getState().damageWife(6);
+        useGame.getState().pushFloater({ text: "여보 쏘지 마!", pos: [t.x, 1.5, t.z], color: "#ff5fa3" });
+      }
+      hitFlash.current = 1;
+    };
+    window.addEventListener("explosion-blast" as any, blast as any);
+
+    return () => {
+      window.removeEventListener("local-hit" as any, handler as any);
+      window.removeEventListener("explosion-blast" as any, blast as any);
+    };
   }, [myRole]);
 
   const start: [number, number, number] = useMemo(

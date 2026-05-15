@@ -256,10 +256,12 @@ export function MonsterManager({ playerRef }: Props) {
     from: "me" | "remote"
   ) {
     if (!m.body) return;
-    m.hp -= damage;
+    const bonus = useGame.getState().partnerBonus ? 1.5 : 1;
+    const effDamage = damage * bonus;
+    m.hp -= effDamage;
     m.wobble = 1;
-    const ix = dirX * knock;
-    const iz = dirZ * knock;
+    const ix = dirX * knock * bonus;
+    const iz = dirZ * knock * bonus;
     m.body.applyImpulse({ x: ix, y: 4 + knock * 0.2, z: iz }, true);
     m.body.applyTorqueImpulse({ x: (Math.random() - 0.5) * 6, y: (Math.random() - 0.5) * 8, z: (Math.random() - 0.5) * 6 }, true);
     const killed = m.hp <= 0;
@@ -274,6 +276,20 @@ export function MonsterManager({ playerRef }: Props) {
       });
     }
     if (killed) {
+      const t = m.body.translation();
+      const r = Math.random();
+      const isBoss = m.def.type === "boss";
+      if (isBoss) {
+        useGame.getState().dropItem("heart", t.x, t.z);
+        useGame.getState().dropItem("star", t.x + 0.6, t.z);
+        useGame.getState().dropItem("star", t.x - 0.6, t.z);
+      } else if (r < 0.08) {
+        useGame.getState().dropItem("heart", t.x, t.z);
+      } else if (r < 0.20) {
+        useGame.getState().dropItem("star", t.x, t.z);
+      } else if (r < 0.30) {
+        useGame.getState().dropItem("ammo", t.x, t.z);
+      }
       fadeOutMonster(id);
       killMonster();
     }
@@ -536,6 +552,11 @@ function ProjectileTicker({
       const r = Math.hypot(p.pos[0], p.pos[2]);
       if (hit || r > 18 || performance.now() - p.born > p.ttl) {
         spawnExplosion([p.pos[0], p.pos[1], p.pos[2]], 4.0);
+        // 폭발 충격파가 플레이어도 날려버림 (자기 자신 포함). 정통 부부 게임의 묘미.
+        const ev = new CustomEvent("explosion-blast", {
+          detail: { x: p.pos[0], z: p.pos[2], radius: 4.0, force: 18, owner: p.owner },
+        });
+        window.dispatchEvent(ev);
         monsters.current.forEach((m, id) => {
           if (!m.body) return;
           const t = m.body.translation();

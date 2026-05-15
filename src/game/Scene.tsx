@@ -8,6 +8,7 @@ import { Skybox } from "./world/Skybox";
 import { LocalPlayer } from "./entities/LocalPlayer";
 import { RemotePlayerView } from "./entities/RemotePlayer";
 import { MonsterManager } from "./entities/MonsterManager";
+import { Drops } from "./entities/Drops";
 import { Hazards } from "./world/Hazards";
 import { useGame } from "./store";
 import { useNet } from "./net";
@@ -36,10 +37,14 @@ export function Scene() {
     const target = playerRef.current;
     let cx = target.x;
     let cz = target.z;
+    let close = false;
     if (enabled && remote) {
       cx = (target.x + remote.x) / 2;
       cz = (target.z + remote.z) / 2;
+      const d = Math.hypot(target.x - remote.x, target.z - remote.z);
+      close = d < 4;
     }
+    useGame.getState().setPartnerBonus(close);
     const desired = new THREE.Vector3(cx, 14, cz + 11);
     camera.position.lerp(desired, Math.min(1, dt * 3));
     const shake = useShake.getState().consume(dt);
@@ -75,6 +80,7 @@ export function Scene() {
       <Arena />
       <Hazards />
       <MonsterManager playerRef={playerRef} />
+      <Drops playerRef={playerRef} />
       <LocalPlayer positionRef={playerRef} />
       {enabled && remote && <RemotePlayerView state={remote} />}
     </group>
