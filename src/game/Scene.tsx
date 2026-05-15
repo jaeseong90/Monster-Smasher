@@ -3,6 +3,7 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
+import { Environment, ContactShadows } from "@react-three/drei";
 import { Arena } from "./world/Arena";
 import { Skybox } from "./world/Skybox";
 import { LocalPlayer } from "./entities/LocalPlayer";
@@ -60,22 +61,36 @@ export function Scene() {
 
   return (
     <group>
-      <ambientLight intensity={0.45} />
-      <hemisphereLight args={["#b29afc", "#180624", 0.6]} />
+      <Environment preset="night" environmentIntensity={0.35} />
+      <ambientLight intensity={0.2} />
+      <hemisphereLight args={["#9b88ff", "#120420", 0.45]} />
       <directionalLight
         castShadow
-        position={[10, 18, 6]}
-        intensity={1.6}
-        shadow-mapSize-width={1024}
-        shadow-mapSize-height={1024}
-        shadow-camera-left={-22}
-        shadow-camera-right={22}
-        shadow-camera-top={22}
-        shadow-camera-bottom={-22}
-        color="#fff5d8"
+        position={[12, 22, 8]}
+        intensity={2.2}
+        shadow-mapSize-width={2048}
+        shadow-mapSize-height={2048}
+        shadow-bias={-0.0005}
+        shadow-normalBias={0.04}
+        shadow-camera-left={-24}
+        shadow-camera-right={24}
+        shadow-camera-top={24}
+        shadow-camera-bottom={-24}
+        color="#fff0d0"
       />
-      <pointLight position={[-8, 5, -6]} intensity={20} color="#ff5cc1" distance={20} />
-      <pointLight position={[8, 5, 8]} intensity={18} color="#39f0ff" distance={20} />
+      <pointLight position={[-10, 4, -8]} intensity={28} color="#ff4dbe" distance={22} decay={2} />
+      <pointLight position={[10, 4, 10]} intensity={26} color="#39f0ff" distance={22} decay={2} />
+      <pointLight position={[0, 12, -14]} intensity={18} color="#ffd76a" distance={26} decay={2} />
+
+      <ContactShadows
+        position={[0, 0.02, 0]}
+        opacity={0.55}
+        scale={42}
+        blur={2.4}
+        far={6}
+        resolution={1024}
+        color="#0a0214"
+      />
 
       <Skybox />
       <Arena />

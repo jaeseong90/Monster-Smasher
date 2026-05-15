@@ -20,9 +20,12 @@ interface Props {
 export function LocalPlayer({ positionRef }: Props) {
   const body = useRef<RapierRigidBody>(null!);
   const modelRef = useRef<THREE.Group>(null!);
+  const innerRef = useRef<THREE.Group>(null!);
   const facing = useRef(0);
   const lastAttack = useRef(0);
   const hitFlash = useRef(0);
+  const moveT = useRef(0);
+  const sinceAttack = useRef(99);
   const myRole = useNet((s) => s.myRole);
   const enabled = useNet((s) => s.enabled);
   const broadcastSelf = useNet((s) => s.broadcastSelf);
@@ -64,6 +67,11 @@ export function LocalPlayer({ positionRef }: Props) {
         modelRef.current.position.set(t.x, 0.1, t.z);
         modelRef.current.rotation.set(Math.PI / 2, facing.current, 0);
       }
+      if (innerRef.current) {
+        innerRef.current.position.y = 0;
+        innerRef.current.rotation.set(0, 0, 0);
+        innerRef.current.scale.set(1, 1, 1);
+      }
       if (enabled) {
         lastBroadcast.current += dt;
         if (lastBroadcast.current >= 0.066) {
@@ -82,12 +90,31 @@ export function LocalPlayer({ positionRef }: Props) {
 
     const t = body.current.translation();
     positionRef.current.set(t.x, t.y, t.z);
+    const moveMag = Math.hypot(input.move.x, input.move.y);
     if (modelRef.current) {
       modelRef.current.position.set(t.x, t.y - 0.1, t.z);
-      if (Math.abs(input.move.x) + Math.abs(input.move.y) > 0.05) {
+      if (moveMag > 0.05) {
         facing.current = Math.atan2(input.move.x, input.move.y);
       }
       modelRef.current.rotation.y = facing.current;
+    }
+    sinceAttack.current += dt;
+    if (moveMag > 0.05) {
+      moveT.current += dt * (8 + moveMag * 4);
+    } else {
+      moveT.current += dt * 2;
+    }
+    if (innerRef.current) {
+      const bobAmp = moveMag > 0.05 ? 0.08 : 0.02;
+      const bob = Math.abs(Math.sin(moveT.current)) * bobAmp;
+      innerRef.current.position.y = bob;
+      const leanZ = moveMag * 0.18;
+      innerRef.current.rotation.x = leanZ;
+      const lungeT = Math.max(0, 1 - sinceAttack.current / 0.22);
+      const lunge = lungeT * lungeT * 0.45;
+      innerRef.current.rotation.x += lunge;
+      const sq = moveMag > 0.05 ? 1 - Math.sin(moveT.current * 2) * 0.04 : 1;
+      innerRef.current.scale.set(1, sq, 1);
     }
 
     const r = Math.hypot(t.x, t.z);
@@ -118,6 +145,7 @@ export function LocalPlayer({ positionRef }: Props) {
     }
     if (pressed && lastAttack.current >= wDef.cooldown) {
       lastAttack.current = 0;
+      sinceAttack.current = 0;
       const ang = facing.current;
       const dx = Math.sin(ang);
       const dz = Math.cos(ang);
@@ -229,9 +257,11 @@ export function LocalPlayer({ positionRef }: Props) {
         <CapsuleCollider args={[0.35, 0.4]} />
       </RigidBody>
       <group ref={modelRef}>
-        <CharacterModel role={myRole} hitFlash={hitFlash.current} />
         <GroundShadow size={0.7} />
-        <WeaponHeld weapon={myWeaponId} />
+        <group ref={innerRef}>
+          <CharacterModel role={myRole} hitFlash={hitFlash.current} />
+          <WeaponHeld weapon={myWeaponId} />
+        </group>
       </group>
     </>
   );

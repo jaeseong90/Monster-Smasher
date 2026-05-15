@@ -3,7 +3,9 @@
 import { Suspense, useEffect, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { Physics } from "@react-three/rapier";
+import * as THREE from "three";
 import { Scene } from "./Scene";
+import { FX } from "./FX";
 import { HUD } from "./hud/HUD";
 import { TitleScreen } from "./hud/TitleScreen";
 import { GameOverScreen } from "./hud/GameOverScreen";
@@ -11,6 +13,7 @@ import { MobileControls } from "./hud/MobileControls";
 import { LoreIntro } from "./hud/LoreIntro";
 import { BiomeBanner } from "./hud/BiomeBanner";
 import { ChoreOverlay } from "./hud/ChoreOverlay";
+import { OrientationGate } from "./hud/OrientationGate";
 import { useGame } from "./store";
 import "./input";
 
@@ -39,16 +42,25 @@ export default function Game() {
     <div className="relative w-full h-full">
       <Canvas
         shadows
-        dpr={[1, 1.5]}
+        dpr={[1, 1.75]}
         camera={{ position: [0, 14, 14], fov: 50 }}
-        gl={{ antialias: true, powerPreference: "high-performance" }}
+        gl={{
+          antialias: true,
+          powerPreference: "high-performance",
+          toneMapping: THREE.ACESFilmicToneMapping,
+          outputColorSpace: THREE.SRGBColorSpace,
+        }}
+        onCreated={({ gl }) => {
+          gl.toneMappingExposure = 1.15;
+        }}
       >
         <color attach="background" args={["#0b0420"]} />
-        <fog attach="fog" args={["#0b0420", 28, 60]} />
+        <fog attach="fog" args={["#0b0420", 26, 58]} />
         <Suspense fallback={null}>
           <Physics gravity={[0, -30, 0]} debug={debug}>
             <Scene />
           </Physics>
+          <FX />
         </Suspense>
       </Canvas>
 
@@ -64,6 +76,7 @@ export default function Game() {
       {status === "paused" && <PausedOverlay />}
       {status === "gameover" && <GameOverScreen />}
       {intro && <LoreIntro onDone={() => setIntro(false)} />}
+      <OrientationGate />
     </div>
   );
 }
