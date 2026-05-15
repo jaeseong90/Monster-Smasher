@@ -1,8 +1,31 @@
 # ⚔️ Monster Smasher
 
-> 화끈한 타격감과 골때리는 물리엔진! 아내와 함께 몬스터를 날려버려라.
+> 화끈한 타격감과 골때리는 물리엔진. 부부가 서로 다른 폰으로 실시간 듀오 액션.
 
-부부가 서로 다른 폰에서 실시간으로 즐기는 3D 물리엔진 액션 게임. 그냥 둘이 퇴근하고 한 판씩 깨면서 스트레스 푸는 용도로 만들었습니다.
+[![Next.js](https://img.shields.io/badge/Next.js-14.2-black?logo=next.js)](https://nextjs.org/)
+[![React Three Fiber](https://img.shields.io/badge/R3F-v8-61dafb?logo=three.js&logoColor=white)](https://docs.pmnd.rs/react-three-fiber)
+[![Rapier](https://img.shields.io/badge/Rapier-WASM-ff6b6b)](https://rapier.rs/)
+[![Supabase Realtime](https://img.shields.io/badge/Supabase-Realtime-3ecf8e?logo=supabase&logoColor=white)](https://supabase.com/realtime)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Tailwind](https://img.shields.io/badge/Tailwind-3.4-38bdf8?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+
+**🎮 데모:** _(배포 후 채워질 자리)_ · **📱 모바일 가로모드 전용**
+
+<!-- TODO: gameplay.gif 또는 hero screenshot 자리. /docs/hero.png 같은 경로 추천 -->
+
+---
+
+## 이 프로젝트로 보여주는 것
+
+> 짧은 시간(주말 프로토타입) 안에 **3D 게임 풀스택**을 어디까지 끌고 갈 수 있는지 시험한 프로젝트.
+
+- **3D 렌더 파이프라인** — React Three Fiber에 ACES 톤매핑·Bloom·Vignette·Chromatic Aberration 후처리, HDRI Environment, ContactShadows, 컬러 림라이트 3-포인트 조명 직접 셋업.
+- **WASM 물리 엔진** — `@react-three/rapier`로 임펄스 기반 넉백, 폭발 블래스트, 환경 헤저드(톱날·가시) 충돌 처리.
+- **실시간 멀티플레이** — Supabase Realtime의 Broadcast/Presence 채널로 P2P 룸. 호스트가 월드 시뮬레이션 권위를 가지고 클라이언트가 입력만 송신하는 단순화된 권위 모델.
+- **상태관리 아키텍처** — Zustand 스토어를 도메인별(`useGame` 게임 상태 / `useNet` 네트 / `useInput` 입력 / `useProgression` 영속 진행도)로 분리, 컴포넌트는 selector로 슬라이스만 구독.
+- **모바일 우선 UX** — `dvh` + `env(safe-area-inset-*)`, 가상 조이스틱·공격 버튼, 가로모드 강제 게이트, PWA 매니페스트.
+- **프로시저럴 캐릭터 모션** — 스켈레탈 애니메이션 없이 sin 기반 walk-bob, lean, attack-lunge, vertical squash로 정적인 인상 제거.
+- **로컬 영속화** — `localStorage` 기반 진행도(무기 언락, 업적, 최고 기록).
 
 ## 세계관
 
@@ -12,10 +35,11 @@
 
 ## 핵심 액션
 
-- **물리 엔진 기반 넉백** — 모든 타격은 임펄스, 몬스터들이 볼링핀처럼 날아갑니다.
-- **회전 톱날 / 가시 함정** — 환경을 활용해서 몬스터를 밀쳐 한 방에 처치.
-- **연쇄 폭발** — 바주카포 폭발로 주변 몬스터들을 동시에 날려버리기.
-- **콤보 시스템** — 연속 처치 시 점수 가산 + 연타 표시.
+- **물리 엔진 기반 넉백** — 모든 타격은 임펄스, 몬스터들이 볼링핀처럼 날아감.
+- **회전 톱날 / 가시 함정** — 환경을 활용한 환경킬.
+- **연쇄 폭발** — 바주카포 폭발은 주변 몬스터 + 아군까지 휘말림.
+- **콤보 시스템** — 연속 처치 가산점 + 부부 거리 ×1.5 보너스.
+- **보스 라운드** — 일정 웨이브마다 거대 보스 + 보스 처치 후 가사 PvP 미니라운드.
 
 ## 무기 라인업
 
@@ -25,85 +49,93 @@
 | 🔨 거대 망치 | 데미지 ↑↑, 강한 넉백 |
 | 🗡️ 대검 | 긴 사거리, 빠른 공속 |
 | 🍳 거대 프라이팬 | 광역 깡통 사운드, 폭발적 넉백 |
-| 🛠️ 뿅망치 | 데미지 ↓, 어마무시한 넉백 + 효과음 |
+| 🛠️ 뿅망치 | 데미지 ↓, 어마무시한 넉백 |
 
 ### 👰 아내 (원거리/화력)
 | 무기 | 성능 |
 |---|---|
-| 🚀 바주카포 | 폭발 광역 공격, 남편도 휘말림 |
+| 🚀 바주카포 | 폭발 광역, 남편도 휘말림 |
 | 🔥 화염방사기 | 지속 대미지 콘 |
 | 🌱 대파 | 빠른 휘두름, 가성비 |
 | 🛠️ 뿅망치 | 자기방어용 |
 
 ## 멀티플레이
 
-부부가 서로 다른 폰에서 실시간으로 같이 플레이합니다.
+서로 다른 기기에서 실시간 듀오.
 
 1. 한 명이 **🏠 방 만들기** → 4자리 코드 생성
 2. 다른 한 명이 **🚪 방 참가하기** → 코드 입력
-3. 둘 다 같은 아레나에 입장, 함께 몬스터 처치
+3. 함께 같은 아레나에 입장, 같은 시드의 월드를 공유
 
-호스트가 월드/몬스터 시뮬레이션을 담당하고, 양쪽 모두 자기 캐릭터 입력을 전송합니다. 통신은 Supabase Realtime Broadcast.
+호스트가 월드/몬스터 시뮬레이션을 담당하고, 양쪽 모두 자기 캐릭터 입력만 송신합니다. 통신은 Supabase Realtime Broadcast 채널.
 
 ## 조작법
 
-### 모바일
-- 좌측 화면 드래그 → 이동
-- 우측 큰 버튼 → 공격
-- 상단 슬롯 → 무기 변경
+| 플랫폼 | 이동 | 공격 | 무기 |
+|---|---|---|---|
+| 📱 모바일 | 좌측 가상 조이스틱 | 우측 큰 버튼 | 상단 슬롯 탭 |
+| 🖥️ PC | `WASD` / 방향키 | `Space` | `1` ~ `4` |
 
-### PC (개발/연습용)
-- `WASD` / 방향키 → 이동
-- `Space` → 공격
-- `1~4` → 무기 변경
-- `P` → 물리 디버그 토글
+`P` — 물리 디버그 토글.
 
-## 개발
+## 로컬 실행
 
 ```bash
 npm install
 npm run dev
 ```
 
-### 멀티플레이 활성화
+### 멀티플레이 활성화 (선택)
 
-`.env.local`에 Supabase 환경변수를 넣으면 자동으로 활성화됩니다:
+`.env.local`에 Supabase 환경변수를 넣으면 자동 활성화됩니다:
 
-```
+```env
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGc...
 ```
 
-환경변수가 없으면 자동으로 싱글 플레이 모드로 동작합니다.
+환경변수가 없으면 자동으로 싱글 플레이로 폴백합니다. **`anon` 키만 사용하며 RLS 우려가 없는 영역**(Realtime 채널만)에서 동작합니다.
 
 ## 스택
 
-- **Next.js 15** App Router (Vercel)
-- **React Three Fiber** + **@react-three/rapier** (WASM 물리엔진)
-- **Zustand** 상태관리
-- **Tailwind CSS**
-- **Supabase Realtime** 멀티플레이 채널
+| 영역 | 기술 |
+|---|---|
+| 프레임워크 | Next.js 14.2 (App Router) |
+| 3D 렌더 | React Three Fiber 8.x, three.js 0.169 |
+| 후처리 | @react-three/postprocessing (ACES, Bloom, Vignette, CA) |
+| 물리 | @react-three/rapier (WASM) |
+| 멀티플레이 | Supabase Realtime (Broadcast + Presence) |
+| 상태 | Zustand |
+| 스타일 | Tailwind CSS |
+| 배포 | Vercel |
 
-## 배포
+## 디렉토리 구조
 
-Vercel에 자동 배포됩니다. 푸시하면 끝.
-
-```bash
-vercel deploy --prod
+```
+app/                 Next.js App Router (page, layout, globals)
+src/game/
+├── Game.tsx         Canvas 셋업 + 톤매핑/exposure + 오버레이 라우팅
+├── Scene.tsx        조명·환경맵·카메라·셰이크
+├── FX.tsx           포스트프로세싱 파이프라인
+├── store.ts         게임 상태 (Zustand)
+├── net.ts           Supabase Realtime 멀티
+├── input.ts         키보드/조이스틱 입력
+├── progression.ts   localStorage 영속 진행도
+├── camera.ts        화면 셰이크 버스
+├── sounds.ts        SFX/BGM
+├── world/           Arena, Hazards, Skybox
+├── entities/        Character, LocalPlayer, RemotePlayer, MonsterManager, Attacks, Drops, ChoreChest, AttackBus
+└── hud/             HUD, MobileControls, TitleScreen, GameOverScreen, LoreIntro, BiomeBanner, ChoreOverlay, OrientationGate
 ```
 
-## 로드맵 / 확장 아이디어
+## 한계 / 알려진 사항
 
-- [ ] 부활 시스템 (뺨때리기 인공호흡)
-- [ ] PVP 보너스 라운드 ("설거지 면제권")
-- [ ] 보스 몬스터 (거대 슬라임, 균열의 군주)
-- [ ] 바이옴 다양화 (집, 도시, 우주정거장, 시댁)
-- [ ] 무기 강화 / 콤보 무기
-- [ ] 햅틱 / 컨트롤러 진동
-- [ ] 일일 챌린지
+- 캐릭터/몬스터가 외부 3D 에셋 없이 primitive 도형(캡슐+구체+박스)으로 구성 — 후처리로 보강하지만 본격 게임의 비주얼 천장은 명확.
+- 호스트 권위 모델이라 호스트가 끊기면 룸이 무너짐 (재연결 로직 없음).
+- 모바일 가로모드 전용.
 
----
+## 라이선스
 
-만든 사람: 부부 둘이 퇴근하고 스트레스 풀려고. 수익 모델 없음. 영원히 무료.
+MIT. 만든 사람의 의도는 부부 둘이 퇴근하고 스트레스 풀기. 마음대로 가져다 쓰시고 PR 환영.
 
 🧔 + 👰 = 💥
