@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useGame } from "../store";
 import { useNet } from "../net";
 import { startBgm, stopBgm } from "../sounds";
+import { useProgression } from "../progression";
 
 export function TitleScreen() {
   const start = useGame((s) => s.start);
@@ -21,12 +22,17 @@ export function TitleScreen() {
   const [code, setCode] = useState("");
   const [waiting, setWaiting] = useState(false);
 
+  const load = useProgression((s) => s.load);
+  const bestScore = useProgression((s) => s.bestScore);
+  const bestWave = useProgression((s) => s.bestWave);
+
   useEffect(() => {
     const saved = localStorage.getItem("ms-name");
     if (saved) setName(saved);
     const role = (localStorage.getItem("ms-role") as "husband" | "wife") || "husband";
     setRole(role);
-  }, [setName, setRole]);
+    load();
+  }, [setName, setRole, load]);
 
   useEffect(() => {
     if (myName) localStorage.setItem("ms-name", myName);
@@ -206,6 +212,19 @@ export function TitleScreen() {
               >
                 참가
               </button>
+            </div>
+          </div>
+        )}
+
+        {(bestScore > 0 || bestWave > 0) && (
+          <div className="mt-4 grid grid-cols-2 gap-2 text-center">
+            <div className="rounded-xl bg-white/5 border border-white/10 py-2">
+              <div className="text-[10px] uppercase text-white/50 tracking-widest">최고 점수</div>
+              <div className="text-amber-300 font-bold text-lg tabular-nums">{bestScore.toLocaleString()}</div>
+            </div>
+            <div className="rounded-xl bg-white/5 border border-white/10 py-2">
+              <div className="text-[10px] uppercase text-white/50 tracking-widest">최고 웨이브</div>
+              <div className="text-pink-300 font-bold text-lg tabular-nums">{bestWave}</div>
             </div>
           </div>
         )}

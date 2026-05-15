@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useGame, HUSBAND_WEAPONS, WIFE_WEAPONS, WEAPONS, type WeaponId } from "../store";
 import { useNet } from "../net";
 import { useInput } from "../input";
+import { useProgression } from "../progression";
 
 export function HUD() {
   const score = useGame((s) => s.score);
@@ -137,23 +138,28 @@ function WeaponSwapper() {
   const list = myRole === "husband" ? HUSBAND_WEAPONS : WIFE_WEAPONS;
   const slot = useInput((s) => s.weaponSlot);
   const setSlot = useInput((s) => s.setWeaponSlot);
+  const unlocked = useProgression((s) => s.unlockedWeapons);
 
   return (
     <div className="pointer-events-auto absolute top-24 left-1/2 -translate-x-1/2 flex gap-2">
       {list.map((w, i) => {
         const def = WEAPONS[w];
         const active = i === slot;
+        const locked = !unlocked.has(w);
         return (
           <button
             key={w}
-            onClick={() => setSlot(i)}
-            className={`rounded-xl px-2.5 py-1.5 border text-xs flex items-center gap-1 active:scale-95 ${
+            onClick={() => !locked && setSlot(i)}
+            disabled={locked}
+            className={`rounded-xl px-2.5 py-1.5 border text-xs flex items-center gap-1 active:scale-95 transition ${
               active
                 ? "bg-amber-400 text-black border-amber-300 shadow-[0_0_18px_rgba(255,200,80,0.5)]"
+                : locked
+                ? "bg-black/30 text-white/30 border-white/10 cursor-not-allowed"
                 : "bg-black/40 text-white/85 border-white/15"
             }`}
           >
-            <span className="text-base leading-none">{def.emoji}</span>
+            <span className="text-base leading-none">{locked ? "🔒" : def.emoji}</span>
             <span className="hidden sm:inline">{def.name}</span>
           </button>
         );

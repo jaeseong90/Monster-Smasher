@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useGame } from "../store";
 import { stopBgm } from "../sounds";
+import { useProgression, type Achievement } from "../progression";
 
 export function GameOverScreen() {
   const score = useGame((s) => s.score);
@@ -11,9 +12,14 @@ export function GameOverScreen() {
   const reset = useGame((s) => s.reset);
   const start = useGame((s) => s.start);
 
+  const recordRun = useProgression((s) => s.recordRun);
+  const [newAchievements, setNewAchievements] = useState<Achievement[]>([]);
+
   useEffect(() => {
     stopBgm();
-  }, []);
+    const granted = recordRun(score, wave, kills);
+    setNewAchievements(granted);
+  }, [recordRun, score, wave, kills]);
 
   return (
     <div className="absolute inset-0 z-30 flex items-center justify-center bg-gradient-to-b from-rose-900/80 to-black/95 p-4">
@@ -32,6 +38,17 @@ export function GameOverScreen() {
           <Stat label="처치" value={`${kills}`} />
         </div>
         <Verdict wave={wave} score={score} />
+        {newAchievements.length > 0 && (
+          <div className="rounded-xl bg-amber-400/10 border border-amber-300/30 p-3 space-y-1.5">
+            <div className="text-amber-200 text-xs font-black tracking-widest">🏅 새 도전과제</div>
+            {newAchievements.map((a) => (
+              <div key={a.id} className="text-left text-sm">
+                <div className="text-white font-bold">✨ {a.name}</div>
+                <div className="text-white/60 text-xs">{a.desc}</div>
+              </div>
+            ))}
+          </div>
+        )}
         <div className="flex gap-2">
           <button
             onClick={start}
